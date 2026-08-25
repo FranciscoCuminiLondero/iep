@@ -1,17 +1,23 @@
 ---
-
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/layout/Header.astro";
+import Footer from "../components/layout/Footer.astro";
+import Hero from "../components/sections/Hero.astro";
+import UpcomingCourse from "../components/sections/UpcomingCourse.astro";
+import About from "../components/sections/About.astro";
+import CourseArchive from "../components/sections/CourseArchive.astro";
+import PantuCTA from "../components/sections/PantuCTA.astro";
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<!-- One Page — orden de secciones según BRIEF.md §3. -->
+<Layout>
+	<Header />
+	<main>
+		<Hero />
+		<UpcomingCourse />
+		<About />
+		<CourseArchive />
+		<PantuCTA />
+	</main>
+	<Footer />
+</Layout>

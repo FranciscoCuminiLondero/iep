@@ -1,0 +1,37 @@
+---
+import { courseRepository } from "../../lib/courses/local.repository";
+import { site } from "../../data/site";
+
+const course = await courseRepository.getUpcoming();
+
+// TODO: extraer a src/lib/whatsapp/messages.ts (VOICE.md §3.4).
+const whatsappHref =
+	course && site.whatsappPhone
+		? `https://wa.me/${site.whatsappPhone}?text=${encodeURIComponent(course.whatsappMessage ?? `Hola, quería consultar por el curso "${course.title}".`)}`
+		: undefined;
+---
+
+<!-- BRIEF.md §02 — Próximo curso: pieza protagonista, tratamiento de afiche (DESIGN.md §6.2). -->
+<!-- TODO: reemplazar este placeholder por el tratamiento tipo afiche/editorial y 1-2 piezas de collage. -->
+<section id="proximo-curso" class="flex flex-col items-center gap-4 bg-white px-6 py-20 text-center">
+	<p class="font-editorial text-xs font-bold tracking-[0.1em] text-bitter-chocolate uppercase">Próximo curso</p>
+	{
+		course ? (
+			<>
+				<h2 class="font-editorial max-w-[24ch] text-[clamp(1.75rem,6vw,3.25rem)] leading-[1.05] font-black text-carbon-black">
+					{course.hook}
+				</h2>
+				<p class="font-identity text-lg font-bold text-carbon-black">{course.title}</p>
+				<p class="font-editorial text-sm font-bold text-carbon-black/70">
+					{course.date} · {course.modality}
+				</p>
+				<p class="font-editorial max-w-[60ch] text-base text-carbon-black/70">{course.description}</p>
+				<a href={whatsappHref ?? "#"} class="font-editorial rounded-full bg-carbon-black px-6 py-3 text-sm font-bold text-white">
+					Consultar por WhatsApp
+				</a>
+			</>
+		) : (
+			<p class="font-editorial text-base text-carbon-black/45">No hay un próximo curso publicado todavía.</p>
+		)
+	}
+</section>

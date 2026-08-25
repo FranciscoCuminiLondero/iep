@@ -1,0 +1,25 @@
+---
+import { site } from "../../data/site";
+
+// TODO: extraer a src/lib/whatsapp/messages.ts cuando se construya el CTA
+// definitivo (mensaje prearmado genérico vs. por curso — VOICE.md §3.4).
+const defaultMessage = "Hola, quería consultar por los cursos de IEP.";
+const whatsappHref = site.whatsappPhone
+	? `https://wa.me/${site.whatsappPhone}?text=${encodeURIComponent(defaultMessage)}`
+	: undefined;
+---
+
+<!-- BRIEF.md §06 — Cierre: CTA principal a WhatsApp + Instagram + info mínima. -->
+<footer id="contacto" class="flex flex-col items-center gap-4 bg-white-2 px-6 py-16 text-center">
+	<p class="font-identity text-lg font-bold text-carbon-black uppercase">¿Tenés una pregunta?</p>
+	<a
+		href={whatsappHref ?? "#"}
+		class="font-editorial rounded-full bg-carbon-black px-6 py-3 text-sm font-bold text-white"
+	>
+		Consultar por WhatsApp
+	</a>
+	<a href={site.instagramUrl} class="font-editorial text-sm text-carbon-black/70" target="_blank" rel="noopener">
+		Instagram
+	</a>
+	<p class="font-editorial text-xs text-carbon-black/45">{site.name}</p>
+</footer>

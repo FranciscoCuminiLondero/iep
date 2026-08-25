@@ -1,0 +1,33 @@
+---
+import { courseRepository } from "../../lib/courses/local.repository";
+
+const pastCourses = await courseRepository.getPast();
+
+const byYear = Map.groupBy(pastCourses, (course) => course.year);
+const years = [...byYear.keys()].sort((a, b) => b - a);
+---
+
+<!-- BRIEF.md §04/§17 — Archivo de cursos, agrupado por año (DESIGN.md §6.4). -->
+<!-- TODO: sin buscador/filtros hasta que el volumen de cursos lo justifique (BRIEF.md §18). -->
+<section id="archivo" class="flex flex-col items-center gap-10 bg-white px-6 py-20">
+	<h2 class="font-identity text-[clamp(1.5rem,4.5vw,2.5rem)] font-extrabold text-carbon-black uppercase">
+		Archivo de cursos
+	</h2>
+	<div class="flex w-full max-w-[720px] flex-col gap-8">
+		{
+			years.map((year) => (
+				<div>
+					<p class="font-identity mb-3 text-xl font-bold text-carbon-black">{year}</p>
+					<ul class="flex flex-col gap-3">
+						{byYear.get(year)!.map((course) => (
+							<li class="font-editorial flex items-baseline justify-between gap-4 border-b border-(--ink-15) pb-3 text-carbon-black">
+								<span class="font-bold">{course.title}</span>
+								<span class="shrink-0 text-sm text-carbon-black/45">{course.date}</span>
+							</li>
+						))}
+					</ul>
+				</div>
+			))
+		}
+	</div>
+</section>

@@ -1,1 +1,26 @@
 @import "tailwindcss";
+@import "./tokens.css";
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--white);
+  color: var(--carbon-black);
+  font-family: var(--font-lato);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Accesibilidad — DESIGN.md §5.5. Con reduced motion, todo el contenido
+   debe quedar visible y usable sin depender de una animación que lo revele. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
