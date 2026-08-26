@@ -12,10 +12,16 @@ function toCourse(entry: CollectionEntry<"courses">): Course {
     hook: data.hook,
     description: data.description,
     date: data.date,
-    startsAt: data.startsAt.toISOString(),
+    startsAt: data.startsAt?.toISOString(),
     year: data.year,
     modality: data.modality,
     image: data.image,
+    flyer: data.flyer,
+    instructor: data.instructor,
+    order: data.order,
+    // El body del Markdown (temario, bio del disertante) ya viene renderizado
+    // a HTML por el Content Layer — no hace falta un render() aparte acá.
+    detailsHtml: entry.rendered?.html,
     status: data.status,
     isFeatured: data.isFeatured,
     whatsappMessage: data.whatsappMessage,
@@ -48,7 +54,16 @@ export class LocalCourseRepository implements CourseRepository {
 
   async getPast(): Promise<Course[]> {
     const entries = await getCollection("courses", ({ data }) => data.status === "archived");
-    return entries.map(toCourse).sort((a, b) => b.startsAt.localeCompare(a.startsAt));
+    // La mayoría de estos cursos están "todavía activos" (BRIEF.md §17-18),
+    // sin fecha puntual — se ordenan por `order` explícito. Los que sí
+    // tengan fecha real (startsAt) van primero, más reciente primero;
+    // el resto respeta el `order` dado en el contenido.
+    return entries.map(toCourse).sort((a, b) => {
+      if (a.startsAt && b.startsAt) return b.startsAt.localeCompare(a.startsAt);
+      if (a.startsAt) return -1;
+      if (b.startsAt) return 1;
+      return (a.order ?? 0) - (b.order ?? 0);
+    });
   }
 
   async getBySlug(slug: string): Promise<Course | null> {

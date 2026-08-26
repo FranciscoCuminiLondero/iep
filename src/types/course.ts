@@ -12,15 +12,29 @@ export interface Course {
   id: string;
   slug: string;
   title: string;
-  hook: string;
+  /** Hook editorial (BRIEF.md §16) — solo tiene sentido para el próximo curso. */
+  hook?: string;
   description: string;
-  /** Fecha en formato de presentación (ej. "16 de septiembre"). */
-  date: string;
+  /** Fecha en formato de presentación (ej. "16 de septiembre"). Opcional: el
+   *  archivo también incluye cursos "todavía activos" sin fecha puntual. */
+  date?: string;
   /** Fecha real en ISO 8601, usada para ordenar y derivar "próximo". */
-  startsAt: string;
-  year: number;
-  modality: string;
-  image: string;
+  startsAt?: string;
+  year?: number;
+  modality?: string;
+  /** Recorte/figura relacionada al curso (BRIEF.md §16) — solo aplica al próximo curso. */
+  image?: string;
+  /** Flyer/afiche completo del curso (estilo post de Instagram), opcional. */
+  flyer?: string;
+  /** Disertante(s), para la fila colapsada del archivo (ej. "Ps. Carolina Ciardi"). */
+  instructor?: string;
+  /**
+   * Orden explícito dentro del archivo cuando no hay fecha que lo determine
+   * (varios de estos cursos son "todavía activos", sin `startsAt`).
+   */
+  order?: number;
+  /** HTML del body del Markdown — temario + bio del disertante, para el desplegable del archivo. */
+  detailsHtml?: string;
   status: CourseStatus;
   /**
    * Marca editorial de "este es el próximo curso".
