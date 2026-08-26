@@ -5,9 +5,12 @@ export const site = {
   shortName: "IEP",
   /** Wordmark del logo, siempre en minúscula (VOICE.md §4). */
   wordmark: "iep",
-  tagline: "Psicoanálisis y cultura, sin la solemnidad de siempre.",
-  // TODO(cliente): confirmar handle real de Instagram.
-  instagramUrl: "https://instagram.com/inconscienteenpantuflas",
-  // TODO(cliente): número real de WhatsApp en formato E.164 sin "+" (ej. "5491122334455").
-  whatsappPhone: "",
+  tagline: "Espacio de interés en Cultura, Salud y Educación",
+  founders: "Iñaki Barés • Manu Calandra",
+  decree: "Decreto N.° 63.036",
+  // Handle real, visto en el flyer y en el feed provistos ("@iccenpantuflas").
+  instagramUrl: "https://instagram.com/iccenpantuflas",
+  instagramHandle: "@iccenpantuflas",
+  // Número real de WhatsApp de Pantu, en formato E.164 sin "+" (+54 9 3417 46-7464).
+  whatsappPhone: "5493417467464",
 } as const;
