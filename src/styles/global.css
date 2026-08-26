@@ -5,6 +5,34 @@
   color-scheme: light;
 }
 
+/* Scroll suave para los links de paginado entre secciones (NextSectionLink).
+   Se apaga solo con prefers-reduced-motion, más abajo en este archivo. */
+html {
+  scroll-behavior: smooth;
+}
+
+/*
+  Backstop, no recorte deliberado: las piezas de collage sangran a
+  propósito fuera del límite de su sección (DESIGN.md §4), y una pieza
+  rotada cerca de un borde agranda su bounding box más allá de su propio
+  ancho. Esto solo evita que ese sangrado genere una barra de scroll
+  horizontal — no debería recortar nada en uso normal. Hace falta en
+  html Y body: Chrome puede propagar el scroll de body al viewport si
+  solo uno de los dos lo declara.
+
+  "clip" y no "hidden": overflow-x:hidden en html/body ROMPE position:sticky
+  en toda la página — al fijar solo el eje X, la especificación fuerza el
+  overflow-y computado a "auto" aunque nunca se haya tocado, y sticky deja
+  de funcionar apenas un ancestro tiene overflow-y distinto de "visible".
+  Esto es lo que impedía que las secciones se superpongan como cards al
+  pasar de una a otra. overflow-x:clip recorta el desborde horizontal igual,
+  pero no establece scrollport y no dispara ese acoplamiento con overflow-y.
+*/
+html,
+body {
+  overflow-x: clip;
+}
+
 body {
   background-color: var(--white);
   color: var(--carbon-black);

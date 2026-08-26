@@ -1,0 +1,25 @@
+---
+// Fila de curso del Archivo — desplegable al tocar, <details> nativo (sin
+// JS, accesible por teclado y lectores de pantalla por default).
+import { ChevronDown } from "lucide-astro";
+import type { Course } from "../../types/course";
+
+interface Props {
+	course: Course;
+}
+
+const { course } = Astro.props;
+---
+
+<li class="border-b border-(--ink-15)">
+	<details class="group py-4">
+		<summary class="flex cursor-pointer list-none items-start justify-between gap-4">
+			<span class="font-editorial text-carbon-black">
+				<span class="block font-bold">{course.title}</span>
+				{course.instructor && <span class="mt-1 block text-sm text-carbon-black/60">{course.instructor}</span>}
+			</span>
+			<ChevronDown class="mt-1 h-5 w-5 shrink-0 text-carbon-black/45 transition-transform group-open:rotate-180" aria-hidden="true" />
+		</summary>
+		{course.detailsHtml && <div class="course-details mt-4" set:html={course.detailsHtml} />}
+	</details>
+</li>

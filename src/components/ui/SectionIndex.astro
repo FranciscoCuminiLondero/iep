@@ -1,0 +1,74 @@
+---
+// Índice flotante de secciones — aparece recién al salir del Hero (mismo
+// patrón de IntersectionObserver que el logo de Header.astro: observa
+// #hero, toggle por data-attribute, sin animación si prefers-reduced-motion
+// porque ya está cubierto por la regla global). rootMargin recorta el 50%
+// SUPERIOR del área de detección, dejando como "root" solo la mitad de
+// abajo del viewport — el Hero deja de intersectarla apenas su borde
+// inferior sube por encima de la mitad de la pantalla (si no, con
+// min-h-screen y contenido más bajo que la pantalla, queda un relleno
+// vacío que había que scrollear de más). Fijo del lado
+// izquierdo, alineado con el margen de contenido del layout (mismos insets
+// que el padding lateral de las secciones, DESIGN.md §3.3). Oculto en
+// mobile — poco espacio lateral, prioridad al contenido. También se oculta
+// apenas aparece el Footer (#contacto): ya tiene su propia navegación,
+// mismo criterio que el logo flotante de Header.astro.
+const sections = [
+	{ label: "Inicio", href: "#hero" },
+	{ label: "Próximo curso", href: "#proximo-curso" },
+	{ label: "Sobre nosotros", href: "#quienes-somos" },
+	{ label: "Archivo", href: "#archivo" },
+	{ label: "Pantu", href: "#pantu" },
+];
+---
+
+<nav
+	id="section-index"
+	data-visible="false"
+	aria-label="Secciones de la página"
+	class="pointer-events-none fixed top-1/2 left-6 z-20 hidden -translate-y-1/2 flex-col gap-3 opacity-0 transition-opacity duration-300 md:left-10 md:flex lg:left-16 data-[visible=true]:pointer-events-auto data-[visible=true]:opacity-100"
+>
+	{
+		sections.map((section) => (
+			<a
+				href={section.href}
+				class="font-editorial text-xs font-bold tracking-[0.05em] text-carbon-black/45 uppercase transition-colors hover:text-bitter-chocolate"
+			>
+				{section.label}
+			</a>
+		))
+	}
+</nav>
+
+<script>
+	const index = document.getElementById("section-index");
+	const hero = document.getElementById("hero");
+	const footer = document.getElementById("contacto");
+
+	if (index && hero && footer) {
+		let heroVisible = true;
+		let footerVisible = false;
+
+		const updateVisibility = () => {
+			index.dataset.visible = heroVisible || footerVisible ? "false" : "true";
+		};
+
+		const heroObserver = new IntersectionObserver(
+			([entry]) => {
+				heroVisible = entry.isIntersecting;
+				updateVisibility();
+			},
+			{ threshold: 0, rootMargin: "-50% 0px 0px 0px" },
+		);
+		heroObserver.observe(hero);
+
+		const footerObserver = new IntersectionObserver(
+			([entry]) => {
+				footerVisible = entry.isIntersecting;
+				updateVisibility();
+			},
+			{ threshold: 0 },
+		);
+		footerObserver.observe(footer);
+	}
+</script>

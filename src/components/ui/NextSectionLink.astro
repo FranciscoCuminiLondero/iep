@@ -1,0 +1,33 @@
+---
+// Link de paginado entre secciones — cada sección ocupa min-h-screen
+// (BRIEF.md §3), así que esto da la sensación de "pasar de página" al
+// bajar. Es un <a href="#id"> plano + scroll-behavior:smooth en
+// global.css, sin JavaScript: respeta prefers-reduced-motion gratis
+// (esa regla ya fuerza scroll-behavior:auto) y sigue funcionando si el
+// usuario navega con teclado o sin JS.
+import { ChevronDown } from "lucide-astro";
+
+interface Props {
+	/** id de la siguiente sección, sin "#". */
+	target: string;
+	label?: string;
+}
+
+const { target, label = "Ir a la siguiente sección" } = Astro.props;
+---
+
+<!-- Sin círculo/fondo. Probado con mix-blend-mode:difference y descartado:
+     el ícono blanco quedaba invisible sobre secciones lisas — en este render
+     el blend calcula contra un backdrop transparente, no contra el color
+     real de la sección, así que "blanco - transparente = blanco sobre
+     blanco" (confirmado en el navegador). En su lugar, un halo sutil con
+     drop-shadow: sigue siendo negro en todos lados (igual que siempre), y
+     el halo blanco solo se nota cuando hay algo oscuro detrás, como sobre
+     hero.png — no agrega ninguna forma. -->
+<a
+	href={`#${target}`}
+	aria-label={label}
+	class="absolute bottom-6 left-1/2 flex h-11 w-11 -translate-x-1/2 items-center justify-center text-carbon-black/60 drop-shadow-[0_0_4px_rgba(255,255,255,0.9)] transition-transform hover:scale-110 hover:text-carbon-black"
+>
+	<ChevronDown class="h-7 w-7" aria-hidden="true" />
+</a>

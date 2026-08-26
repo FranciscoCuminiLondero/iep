@@ -1,0 +1,126 @@
+---
+// Figura flotante / "personaje-recorte" — patrón DISTINTO de CollagePiece.
+//
+// Es un recorte PNG de cuerpo/busto completo, sin fondo, que se muestra
+// siempre entero — nunca recortado por un marco propio. Lo que lo "corta"
+// es el borde real del viewport (vía overflow-x:clip en html/body,
+// global.css), no un contenedor ajustado a su tamaño. Por eso este
+// componente:
+//   - no tiene rotación (siempre vertical),
+//   - no tiene overflow:hidden / clip-path propio,
+//   - no tiene sombra, filtro, borde ni fondo,
+//   - no recorta la imagen (sin object-fit:cover ni zoom): se ve completa.
+//
+// CollagePiece sigue existiendo aparte para fotos chicas, frases y
+// papeles, con su propia lógica de marco + rotación — no se mezclan.
+interface Props {
+	src: string;
+	alt: string;
+	/**
+	 * Tamaño + posición (Tailwind), ej. "absolute -left-16 top-24 h-[65vh]".
+	 * El corte por el borde del viewport se logra posicionando la figura
+	 * parcialmente fuera de su sección (position:relative en la sección) —
+	 * el overflow-x:hidden global hace el resto.
+	 */
+	class?: string;
+}
+
+const { src, alt, class: className } = Astro.props;
+---
+
+<img src={src} alt={alt} class:list={["figure-cutout", className]} />
+
+<style is:global>
+	/*
+	  Iteración 1 (:where() con scope de Astro) no alcanzó: Astro compila
+	  ":where(.figure-cutout)" como "[data-astro-cid-x]:where(...)", lo que
+	  igual sube la especificidad — confirmado en el navegador.
+	  Iteración 2 (is:global + :where(), especificidad 0 real) TAMPOCO
+	  alcanzó: Tailwind v4 envuelve sus utilities en `@layer utilities`, y
+	  en CSS las cascade layers deciden ANTES que la especificidad — un
+	  estilo sin layer le gana a cualquier utility de Tailwind sin importar
+	  cuán baja sea su especificidad. Confirmado inspeccionando los
+	  stylesheets: `.hidden{display:none}` vive en `@layer utilities`.
+	  Fix real: meter esto en `@layer base`, que Tailwind ya declara con
+	  MENOR prioridad que `utilities` — así cualquier utility (hidden,
+	  md:block, w-*, etc.) gana siempre, sin pelear ni por layer ni por
+	  especificidad ni por orden de carga.
+	*/
+	@layer base {
+		:where(.figure-cutout) {
+			display: block;
+			width: auto;
+			pointer-events: none;
+		}
+	}
+
+	/*
+	  "Se van pegando" al bajar (Y al subir): opacity+translateY (mismo
+	  patrón de DESIGN.md §5.3, sin rotación porque estas figuras nunca
+	  rotan). El IntersectionObserver de más abajo agrega/saca .is-visible
+	  cada vez que la figura entra/sale del viewport — se repite en los dos
+	  sentidos de scroll, no solo la primera vez que aparece bajando.
+	  prefers-reduced-motion ya lo cubre la regla global (duration casi 0):
+	  sigue revelando al entrar en viewport, solo que sin desplazamiento.
+
+	  Se probó también animation-timeline:view() (progreso atado 1:1 al
+	  scroll, sin necesitar el observer) y se descartó: estas figuras viven
+	  DENTRO de secciones con position:sticky (para el efecto "cards" entre
+	  secciones), y en cuanto la sección queda pegada, la figura se congela
+	  en su posición en el viewport — medido con la Web Animations API, el
+	  progreso del view-timeline queda trabado en 0 apenas eso pasa, aunque
+	  la figura ya esté visible. IntersectionObserver no tiene ese problema:
+	  solo le importa si el elemento intersecta el viewport ahora, sin
+	  importar si llegó ahí por scroll normal o porque quedó pegado.
+	*/
+	:where(.figure-cutout) {
+		opacity: 0;
+		transform: translateY(28px);
+		transition:
+			opacity var(--duration-slow) var(--ease-editorial),
+			transform var(--duration-slow) var(--ease-editorial);
+	}
+
+	:where(.figure-cutout.is-visible) {
+		opacity: 1;
+		transform: translateY(0);
+	}
+</style>
+
+<script>
+	// Un solo observer para TODAS las figuras de la página — Astro dedupea
+	// este <script> aunque el componente se use muchas veces (Lacan, los 4
+	// Freud, Bauman, libros.png, hero.png), así que corre una sola vez.
+	const figures = document.querySelectorAll(".figure-cutout");
+
+	if ("IntersectionObserver" in window) {
+		const observer = new IntersectionObserver(
+			(entries) => {
+				// Sin obs.unobserve() ni "if (isIntersecting)" solo — se
+				// alterna la clase en los dos sentidos (toggle, no solo add),
+				// así la animación se repite cada vez que la figura entra o
+				// sale del viewport, subiendo o bajando.
+				for (const entry of entries) {
+					entry.target.classList.toggle("is-visible", entry.isIntersecting);
+				}
+			},
+			// threshold 0 (no 0.2): estas figuras se cortan A PROPÓSITO por el
+			// borde del viewport (ver el comentario del componente, arriba del
+			// todo) — Freud/Bauman/libros llegan a tener buena parte de su
+			// bounding box entera fuera de pantalla por diseño, sobre todo en
+			// mobile/tablet con los offsets pensados para desktop. Exigir 20%
+			// de esa caja completa visible es pedir de más: con el toggle de
+			// más arriba (que ahora sí puede volver a ocultar, no solo
+			// mostrar una vez), eso las dejaba "desaparecidas" en cuanto la
+			// fracción visible caía por debajo del 20%. Con threshold 0, un
+			// solo píxel visible ya cuenta como intersección.
+			{ threshold: 0 },
+		);
+
+		figures.forEach((figure) => observer.observe(figure));
+	} else {
+		// Sin soporte de IntersectionObserver: mostrar todo directo, nunca
+		// depender de JS para que el contenido exista.
+		figures.forEach((figure) => figure.classList.add("is-visible"));
+	}
+</script>

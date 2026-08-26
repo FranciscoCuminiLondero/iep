@@ -41,6 +41,13 @@
   --duration-fast: 200ms;
   --duration-base: 400ms;
   --duration-slow: 600ms;
+
+  /*
+    Collage — DESIGN.md §4, corregido: el efecto de "pegado" sale del
+    recorte + la rotación + el solapamiento entre piezas, nunca de una
+    sombra. Regla dura: no se sube este valor de "none" en .collage-piece.
+  */
+  --collage-shadow: none;
 }
 
 @theme {

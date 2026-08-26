@@ -1,0 +1,77 @@
+---
+// Pieza de collage — DESIGN.md §4 ("Sistema de collage").
+//
+// Encuadre tipo "ventana": un marco con overflow:hidden + object-fit:cover
+// sobre la imagen interna — nunca una card con padding/fondo/sombra que
+// muestre la foto completa. El marco puede tener su propio aspect-ratio
+// (vía `class`), distinto al de la imagen fuente, para forzar un recorte
+// deliberado; `zoom` añade además un scale sobre la imagen interna para
+// un recorte más cerrado todavía ("recorte de revista").
+//
+// Regla dura, no de estilo (DESIGN.md §4.2 corregido): CERO sombra y CERO
+// border-radius en estas piezas. El efecto de "pegado" sale del recorte,
+// la rotación y el solapamiento entre piezas — nunca de box-shadow. Ver
+// `--collage-shadow` en tokens.css.
+interface Props {
+	src: string;
+	alt: string;
+	/** Grados de rotación. Rango -6 a 6 (DESIGN.md §4.3). Nunca igual a la pieza contigua. */
+	rotation?: number;
+	/** Scale sobre la imagen interna, 1–1.4. 1 = solo el recorte que ya impone el aspect-ratio del marco. */
+	zoom?: number;
+	/** object-position de la imagen interna: qué porción de la foto queda visible tras el recorte. */
+	focalPoint?: string;
+	/** Tamaño + posición del marco (Tailwind): w-*, aspect-*, absolute/inset/-right-*, etc. */
+	class?: string;
+}
+
+const { src, alt, rotation = 0, zoom = 1, focalPoint = "50% 50%", class: className } = Astro.props;
+---
+
+<div class:list={["collage-piece", className]} style={`--rotation: ${rotation}deg;`}>
+	<img
+		src={src}
+		alt={alt}
+		class="collage-piece__img"
+		style={`--zoom: ${zoom}; object-position: ${focalPoint};`}
+	/>
+</div>
+
+<style is:global>
+	/*
+	  `display` va aparte, en @layer base: Tailwind mete sus utilities en
+	  `@layer utilities`, y en CSS las cascade layers deciden ANTES que la
+	  especificidad — un estilo sin layer le gana a cualquier utility sin
+	  importar cuán baja sea su especificidad (probado con FigureCutout: ni
+	  is:global ni :where() alcanzaban solos). @layer base es la única
+	  forma real de que alguien pueda apagar un CollagePiece en mobile con
+	  `hidden`/`md:block` sin pelear con Tailwind.
+	*/
+	@layer base {
+		:where(.collage-piece) {
+			display: block;
+		}
+	}
+
+	/*
+	  Todo lo demás queda FUERA de cualquier layer a propósito: son reglas
+	  duras (DESIGN.md §4.2) — cero sombra, cero border-radius — que ningún
+	  className externo debe poder pisar. Sin layer, gana siempre.
+	*/
+	.collage-piece {
+		overflow: hidden;
+		border-radius: 0;
+		box-shadow: var(--collage-shadow);
+		transform: rotate(var(--rotation));
+		/* Nunca debe robarle el toque a un CTA cercano (DESIGN.md §4.5). */
+		pointer-events: none;
+	}
+
+	.collage-piece__img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transform: scale(var(--zoom));
+	}
+</style>
