@@ -15,6 +15,16 @@ interface Props {
 }
 
 const { title = site.name, description = site.tagline } = Astro.props;
+
+// Imagen para Open Graph/Twitter Card (la vista previa al compartir el link
+// por WhatsApp, Instagram, etc. — sin esto, el link comparte sin imagen).
+// 1200x630, el tamaño estándar que esperan esas plataformas.
+const ogImagePath = "/open-graph-wpp.png";
+// Absoluta si ya hay dominio (site.url, ver TODO en site.ts); si no,
+// relativa — funciona en local/preview, pero varias redes necesitan la
+// absoluta para resolver bien la imagen una vez en producción.
+const ogImage = site.url ? `${site.url}${ogImagePath}` : ogImagePath;
+const canonicalUrl = site.url ? `${site.url}${Astro.url.pathname}` : undefined;
 ---
 
 <!doctype html>
@@ -30,6 +40,23 @@ const { title = site.name, description = site.tagline } = Astro.props;
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 		<meta name="description" content={description} />
+		{canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+
+		{/* Open Graph (WhatsApp, Instagram, Facebook, LinkedIn) + Twitter Card:
+		    controlan la "tarjeta" que arma cada red al pegar el link — sin esto,
+		    comparte sin imagen ni texto prolijo. og:title/description repiten
+		    los props de arriba a propósito (mismo contenido, otro formato). */}
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content={site.name} />
+		<meta property="og:locale" content="es_AR" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:image" content={ogImage} />
+		{canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={ogImage} />
 	</head>
 	<body>
 		<slot />
