@@ -1,6 +1,10 @@
 ---
 import { courseRepository } from "../../lib/courses/local.repository";
 import { site } from "../../data/site";
+import FigureCutout from "../collage/FigureCutout.astro";
+import CollagePiece from "../collage/CollagePiece.astro";
+import NextSectionLink from "../ui/NextSectionLink.astro";
+import { MessageCircle } from "lucide-astro";
 
 const course = await courseRepository.getUpcoming();
 
@@ -12,26 +16,92 @@ const whatsappHref =
 ---
 
 <!-- BRIEF.md §02 — Próximo curso: pieza protagonista, tratamiento de afiche (DESIGN.md §6.2). -->
-<!-- TODO: reemplazar este placeholder por el tratamiento tipo afiche/editorial y 1-2 piezas de collage. -->
-<section id="proximo-curso" class="flex flex-col items-center gap-4 bg-white px-6 py-20 text-center">
-	<p class="font-editorial text-xs font-bold tracking-[0.1em] text-bitter-chocolate uppercase">Próximo curso</p>
+<!-- TODO: reemplazar este placeholder por el tratamiento tipo afiche/editorial completo. -->
+<!-- Layout de dos columnas desde md: flyer (recuadro) a la izquierda,
+     texto a la derecha. El título mostrado es course.title (el nombre
+     real del curso), no course.hook. md:sticky md:top-0: efecto "cards" al
+     pasar de sección (la siguiente sube y tapa esta mientras queda
+     pegada).
+
+     Sin wrapper individual — a propósito, ver comentario en Hero.astro:
+     el containing block de este sticky es el wrapper que agrupa las cinco
+     secciones "cards" en index.astro, necesario para que cada una quede
+     tapada por la siguiente.
+
+     SOLO desde md — ver comentario en Hero.astro: en mobile esta sección
+     apila flyer + Lacan + texto en columna y termina midiendo 1058px
+     contra ~842px de viewport (medido); con sticky, el botón de WhatsApp
+     (más abajo del todo) no se vuelve alcanzable hasta un tramo de scroll
+     enorme, para cuando "Quiénes somos" ya la tapó. -->
+<section id="proximo-curso" class="relative flex min-h-screen flex-col items-center justify-center gap-10 bg-white px-6 py-20 text-center md:sticky md:top-0 md:flex-row md:gap-16 md:text-left">
 	{
 		course ? (
 			<>
-				<h2 class="font-editorial max-w-[24ch] text-[clamp(1.75rem,6vw,3.25rem)] leading-[1.05] font-black text-carbon-black">
-					{course.hook}
-				</h2>
-				<p class="font-identity text-lg font-bold text-carbon-black">{course.title}</p>
-				<p class="font-editorial text-sm font-bold text-carbon-black/70">
-					{course.date} · {course.modality}
-				</p>
-				<p class="font-editorial max-w-[60ch] text-base text-carbon-black/70">{course.description}</p>
-				<a href={whatsappHref ?? "#"} class="font-editorial rounded-full bg-carbon-black px-6 py-3 text-sm font-bold text-white">
-					Consultar por WhatsApp
-				</a>
+				{course.flyer && (
+					// Recuadro con el flyer completo del curso — CollagePiece porque acá sí
+					// se quiere mostrar entero y legible (zoom=1, aspect-ratio real del
+					// afiche), a diferencia de la figura-recorte de la derecha.
+					<CollagePiece
+						src={course.flyer}
+						alt={`Flyer del curso "${course.title}"`}
+						rotation={-3}
+						class="aspect-[404/505] w-48 shrink-0 sm:w-56 md:w-64"
+					/>
+				)}
+
+				{/* Lacan entre el flyer y el texto — pieza fija de identidad de la
+				    sección (no viene de course.image, es un pedido puntual de diseño). */}
+				<FigureCutout
+					src="/images/lacan.png"
+					alt="Jacques Lacan"
+					class="h-[36vh] shrink-0 md:h-[42vh] lg:h-[46vh]"
+				/>
+
+				<div class="relative isolate flex max-w-md flex-col items-center gap-4 md:items-start">
+					<p class="font-editorial text-xs font-bold tracking-[0.1em] text-bitter-chocolate uppercase">Próximo curso</p>
+					<h2 class="font-editorial text-[clamp(1.75rem,6vw,3.25rem)] leading-[1.05] font-black text-carbon-black">
+						{course.title}
+					</h2>
+					{(course.date || course.modality) && (
+						<p class="font-editorial text-sm font-bold text-carbon-black/70">
+							{[course.date, course.modality].filter(Boolean).join(" · ")}
+						</p>
+					)}
+					<p class="font-editorial text-base text-carbon-black/70">{course.description}</p>
+					<a
+						href={whatsappHref ?? "#"}
+						class="font-editorial flex items-center gap-2 rounded-full bg-carbon-black px-6 py-3 text-sm font-bold text-white"
+					>
+						{/* MessageCircle, no el logo de WhatsApp: ver comentario del mismo
+						    ícono en PantuCTA.astro — Lucide no trae logos de marca. */}
+						<MessageCircle class="h-4 w-4" aria-hidden="true" />
+						Consultar por WhatsApp
+					</a>
+
+					{course.image && (
+						// Figura relacionada al tema del curso, tomada del propio contenido
+						// (DESIGN.md §6.2). Patrón "personaje-recorte" (no CollagePiece): se ve
+						// completa, sin rotación ni sombra. Pegada al borde derecho de esta
+						// columna de texto (left-full) desde md — en mobile/tablet "left-full"
+						// no tiene sentido (una sola columna, angosta): en vez de eso queda
+						// chica, en la esquina inferior derecha de esta MISMA columna, con
+						// -z-10 (igual que Freud/Bauman/libros) para quedar detrás del texto
+						// si se solapa en vez de taparlo. Visible en todos los tamaños (sin
+						// `hidden`). El div de esta columna lleva `isolate` (ver clase, más
+						// abajo) para que ese -z-10 no se escape al contexto raíz de la
+						// página — misma explicación que el comentario de Freud en
+						// About.astro.
+						<FigureCutout
+							src={course.image}
+							alt={`Figura relacionada con "${course.title}"`}
+							class="absolute right-0 bottom-0 -z-10 h-20 sm:h-28 md:top-0 md:right-auto md:bottom-auto md:left-full md:z-auto md:h-[42vh] lg:h-[50vh]"
+						/>
+					)}
+				</div>
 			</>
 		) : (
 			<p class="font-editorial text-base text-carbon-black/45">No hay un próximo curso publicado todavía.</p>
 		)
 	}
+	<NextSectionLink target="quienes-somos" label="Ir a quiénes somos" />
 </section>

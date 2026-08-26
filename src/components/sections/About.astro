@@ -1,13 +1,147 @@
 ---
+import FigureCutout from "../collage/FigureCutout.astro";
+import CollagePiece from "../collage/CollagePiece.astro";
+import NextSectionLink from "../ui/NextSectionLink.astro";
+import { site } from "../../data/site";
+
+// Prensa/reconocimientos reales — la cita de abajo es textual de la
+// declaración del Concejo Municipal de Rosario (ver declaracion-interes.png).
+const press = [
+	{
+		label: "Declaración de interés cultural",
+		href: "https://www.concejorosario.gov.ar/los-temas-de-la-sesion-de-hoy-54/",
+	},
+	{
+		label: "Entrevista salud mental",
+		href: "https://radiocut.fm/audiocut/entrevista-al-psicologo-manuel-calandra/",
+	},
+	{
+		label: 'Nota "La Capital"',
+		href: "https://www.lacapital.com.ar/educacion/graban-videos-ayudar-las-materias-otros-estudiantes-n2588939.html",
+	},
+];
 ---
 
 <!-- BRIEF.md §03 — Quiénes somos: fotografía + composición + pocas líneas (DESIGN.md §6.3). -->
-<!-- TODO: reemplazar el texto por copy definitivo + fotografía + 1-3 piezas de collage. -->
-<section id="quienes-somos" class="flex flex-col items-center gap-4 bg-white-2 px-6 py-20 text-center">
-	<h2 class="font-identity text-[clamp(1.5rem,4.5vw,2.5rem)] font-extrabold text-carbon-black uppercase">
-		Quiénes somos
-	</h2>
-	<p class="font-editorial max-w-[60ch] text-base text-carbon-black/70">
-		IEP — Inconsciente en Pantuflas es un espacio de formación en psicoanálisis y cultura.
-	</p>
+<!-- Layout de dos columnas desde md: texto a la izquierda, feed de
+     Instagram (recuadro, clickeable) a la derecha — mismo patrón que
+     Próximo curso. -->
+<!-- Freud repetido 4 veces en "escalera", sangrando hacia el borde derecho
+     del viewport — que el corte se coma parte de las figuras ES el
+     concepto, no algo a evitar. md:sticky md:top-0: efecto "cards" al
+     pasar de sección — Archivo (después en el DOM) tapa esta sección
+     entera cuando sube por encima.
+
+     bottom POSITIVO (levantadas, no ya "-bottom"): antes cruzaban 8-32px
+     por debajo del límite de la sección, hacia Archivo — con ese borde tan
+     pegado al piso de la pantalla se sentían cortadas de más. Ahora quedan
+     32/24/16/8px por ENCIMA del borde inferior (ya no cruzan hacia
+     Archivo, que de todos modos ya la tapa entera sola). h-[52vh]→h-[64vh]:
+     más grandes, se ven más completas. z-index (40/30/20/10, más metida
+     hacia adentro = adelante): sin esto quedaban DETRÁS del feed de
+     Instagram — CollagePiece usa `transform` (para la rotación), y
+     transform crea su propio stacking context al mismo nivel que estos
+     absolute con z-index:auto; al venir después en el DOM, el feed ganaba
+     el empate. Este z-index es seguro (a diferencia del que se sacó antes
+     para el cruce hacia Archivo): solo compite contra hermanos DENTRO de
+     esta misma sección (el feed), no contra Archivo/Pantu, así que no
+     depende de cuánto tiempo quede pegada.
+
+     Visibles en mobile/tablet también (sin `hidden`), en la MISMA esquina
+     inferior derecha que en desktop (mismo bottom-*/-right-*, sin
+     overrides por breakpoint) — solo cambia el tamaño (h-56 en mobile,
+     el doble de la h-28 original, para que se note más; sm:h-20 en
+     tablet, la mitad de esa h-40 original, para que en esa franja
+     intermedia no compita tanto con el feed; md:h-[64vh] en desktop, sin
+     cambios). Antes tenían una posición mobile aparte (arriba, pegada al
+     título) para evitar que quedaran tapadas por el feed de Instagram al
+     coincidir con esa esquina en el layout apilado — pero eso se sintió
+     peor que el problema que evitaba (Freud flotando sobre el título). Se
+     pidió explícitamente volver a la esquina de desktop y aceptar que en
+     mobile tape un poco el feed: es parte de la estética (mismo espíritu
+     que Bauman/libros cruzando hacia la sección anterior). El z-index
+     positivo (40/30/20/10) queda IGUAL en todos los tamaños por lo mismo:
+     para que ese solapamiento sea Freud ENCIMA del feed, no escondido
+     detrás.
+
+     `isolate` en la sección sigue siendo OBLIGATORIO con z-index positivo
+     en todos los tamaños: en mobile esta sección es position:relative SIN
+     z-index propio, y relative sin z-index NO crea contexto de stacking (a
+     diferencia de sticky, que siempre lo crea) — sin `isolate`, z-40 se
+     escaparía hacia el contexto raíz de toda la página, ganándole a
+     CUALQUIER cosa con z-index menor en cualquier parte del sitio,
+     incluido el Header fixed (z-20) al hacer scroll. `isolate` acota la
+     competencia a esta sección (el feed), como en desktop.
+
+     sticky SOLO desde md — ver comentario en Hero.astro: en mobile esta
+     sección apila texto + feed en columna y termina midiendo 1139px
+     contra ~842px de viewport (medido); con sticky, buena parte del
+     contenido (los links de prensa, el feed) no se vuelve alcanzable
+     hasta un tramo de scroll enorme, para cuando Archivo ya la tapó. -->
+<section id="quienes-somos" class="relative isolate flex min-h-screen flex-col items-center justify-center gap-10 bg-white-2 px-6 py-24 text-center md:sticky md:top-0 md:flex-row md:gap-16 md:text-left">
+	<FigureCutout
+		src="/images/Freud.png"
+		alt="Retrato de Sigmund Freud"
+		class="absolute -right-8 bottom-8 z-40 h-56 sm:h-20 md:h-[64vh]"
+	/>
+	<FigureCutout
+		src="/images/Freud.png"
+		alt="Retrato de Sigmund Freud"
+		class="absolute -right-6 bottom-6 z-30 h-56 sm:h-20 md:h-[64vh]"
+	/>
+	<FigureCutout
+		src="/images/Freud.png"
+		alt="Retrato de Sigmund Freud"
+		class="absolute -right-4 bottom-4 z-20 h-56 sm:h-20 md:h-[64vh]"
+	/>
+	<FigureCutout
+		src="/images/Freud.png"
+		alt="Retrato de Sigmund Freud"
+		class="absolute -right-2 bottom-2 z-10 h-56 sm:h-20 md:h-[64vh]"
+	/>
+
+	<div class="flex max-w-md flex-col items-center gap-4 md:items-start">
+		<h2 class="font-identity text-[clamp(1.5rem,4.5vw,2.5rem)] font-extrabold text-carbon-black uppercase">
+			Espacio de interés en Cultura, Salud y Educación
+		</h2>
+		<p class="font-editorial text-base text-carbon-black/70">
+			Esa distinción ({site.decree}) es la declaración de interés municipal del Concejo de
+			Rosario a la cuenta de Instagram y la producción audiovisual de IEP, "por su gran
+			aporte al ámbito educativo y formativo para el desarrollo de los futuros
+			profesionales de la salud mental de la ciudad y la región".
+		</p>
+		<p class="font-editorial text-sm font-bold text-carbon-black/70">{site.founders}</p>
+
+		<div class="mt-2 flex flex-col items-center gap-3 md:items-start">
+			<p class="font-editorial text-xs font-bold tracking-[0.1em] text-carbon-black/45 uppercase">En los medios</p>
+			<a href={press[0].href} target="_blank" rel="noopener" class="flex w-full flex-col items-center gap-2 md:items-start">
+				<CollagePiece
+					src="/images/declaracion-interes.png"
+					alt="Declaración de interés municipal del Concejo de Rosario a Inconsciente en Pantuflas"
+					rotation={-1}
+					class="aspect-[759/225] w-full"
+				/>
+				<span class="font-editorial text-sm font-bold text-bitter-chocolate underline underline-offset-2">{press[0].label}</span>
+			</a>
+			{
+				press.slice(1).map((item) => (
+					<a href={item.href} target="_blank" rel="noopener" class="font-editorial text-sm font-bold text-bitter-chocolate underline underline-offset-2">
+						{item.label}
+					</a>
+				))
+			}
+		</div>
+	</div>
+
+	<a
+		href={site.instagramUrl}
+		target="_blank"
+		rel="noopener"
+		class="block w-48 shrink-0 sm:w-56 md:w-64"
+		aria-label="Ver el feed de Instagram de IEP"
+	>
+		<CollagePiece src="/images/feed-ig.png" alt="Feed de Instagram de IEP" rotation={2} class="aspect-[906/1600] w-full" />
+	</a>
+
+	<NextSectionLink target="archivo" label="Ir al archivo de cursos" />
 </section>

@@ -1,5 +1,7 @@
 ---
 import { site } from "../../data/site";
+import FigureCutout from "../collage/FigureCutout.astro";
+import { MessageCircle } from "lucide-astro";
 
 // TODO: extraer a src/lib/whatsapp/messages.ts (VOICE.md §3.4).
 const defaultMessage = "Hola Pantu, tengo una pregunta.";
@@ -9,14 +11,74 @@ const whatsappHref = site.whatsappPhone
 ---
 
 <!-- BRIEF.md §05 — Pantu: aparición contextual, nunca widget flotante permanente (DESIGN.md §6.5). -->
-<!-- TODO: ilustración/personaje de Pantu; hoy es solo texto + CTA. -->
-<section id="pantu" class="flex flex-col items-center gap-4 bg-white-3 px-6 py-20 text-center">
+<!-- Libros = "personaje-recorte" (FigureCutout), transición Archivo → Pantu
+     en md+: arranca antes del límite de esta sección (top negativo) y cruza
+     hacia arriba, sobre el final de "Archivo de cursos" — mismo patrón que
+     Freud/Bauman entre Quiénes somos y Archivo. No necesita z-index para
+     ESO: al venir después en el DOM ya pinta encima de la sección anterior.
+     Del lado derecho para no repetir el lado de Bauman.
+     Altura FIJA (no vh) + peek chico (~30px) hacia adentro de Pantu, igual
+     que Freud/Bauman (8-32px) — no solo por estética: Pantu es la única de
+     estas secciones que NO es sticky (ver comentario más abajo), así que
+     cualquier parte de esta imagen que quede a más de ~200px del borde
+     superior de Pantu nunca llega a scrollearse fuera de vista (el Footer,
+     que la sigue, mide ~224px — es lo único que la página puede "esconder"
+     del tope de Pantu antes de terminarse). Con h-96 (384px) y -top-88
+     (352px) el peek queda en 32px, bien por debajo de esos ~224px. El
+     offset empuja la imagen hacia arriba, hacia Archivo — hay margen de
+     sobra (~594px libres entre el final del listado de cursos y el borde
+     de Pantu) antes de tapar texto, que fue el bug con -top-102 y la
+     imagen entera de 418px.
+
+     Visible en mobile/tablet también (sin `hidden`), con una posición Y
+     tamaño DISTINTOS al de md+ (no los mismos valores achicados): el cruce
+     hacia Archivo (-top-88) está pensado para los 384px de la versión
+     grande — con la versión chica de mobile quedaría flotando lejos, ya
+     sin tocar ni Pantu ni Archivo. En vez de eso, en mobile/tablet queda
+     pegada arriba a la derecha de esta misma sección (-top-8 -right-8),
+     h-48 en mobile (el doble de la h-24 original, para que se note más;
+     sm:h-32 en tablet queda como estaba), con -z-10 (igual que Freud/Bauman) para que si se solapa con
+     el saludo de Pantu quede detrás del texto, no encima. Por eso mismo
+     esta sección necesita `isolate` (ver clase, abajo): al ser siempre
+     position:relative SIN z-index propio (nunca sticky, ver el porqué más
+     abajo), sin `isolate` ese -z-10 se escapa al contexto raíz de la
+     página y pierde contra cualquier z-index del sitio (el Header
+     flotante, por ejemplo) — misma explicación completa en el comentario
+     de Freud, About.astro. -->
+<!-- A propósito SIN sticky (a diferencia de Hero/Próximo curso/Quiénes
+     somos/Archivo): es la última sección antes del Footer, y el Footer es
+     mucho más bajo que una pantalla completa (logo + nav + contacto). Con
+     sticky, Pantu se queda pegada hasta agotar su propio min-h-screen de
+     scroll — pero como no queda tanto scroll después (el Footer termina
+     antes), nunca llega a taparse del todo: queda un pedazo de ella
+     asomando arriba del Footer para siempre, sin poder resolverse. Pantu
+     no necesita ser sticky para "tapar" a Archivo — eso lo logra Archivo
+     quedando pegada (ver su comentario) mientras Pantu, atrás en el DOM,
+     pinta por encima con normal scroll. -->
+<section id="pantu" class="relative isolate flex min-h-screen flex-col items-center justify-center gap-4 bg-white-3 px-6 py-20 text-center">
+	<FigureCutout
+		src="/images/libros.png"
+		alt="Pila de libros de psicoanálisis y filosofía"
+		class="absolute -top-8 -right-8 -z-10 h-48 sm:h-32 md:-top-88 md:-right-42 md:z-auto md:h-96"
+	/>
+	<img src="/images/pantu.png" alt="Pantu, el asistente de IEP" class="h-32 w-32 rounded-full object-cover sm:h-40 sm:w-40" />
+	{/* Vista previa del saludo de Pantu en WhatsApp — VOICE.md §2.3. No es el
+	    mismo texto que manda el CTA (ese va en primera persona del usuario,
+	    VOICE.md §3.4); esto es lo que Pantu dice ÉL cuando arranca la
+	    conversación, mostrado como preview de burbuja de chat. */}
+	<p class="font-editorial max-w-[32ch] rounded-2xl bg-white px-5 py-3 text-base text-carbon-black">
+		👋 ¡Hola! Soy Pantu, el asistente virtual de Inconsciente en Pantuflas.
+	</p>
 	<p class="font-editorial text-xl font-bold text-carbon-black">¿No encontraste lo que buscabas?</p>
 	<p class="font-editorial text-base text-carbon-black/70">Pantu puede ayudarte.</p>
 	<a
 		href={whatsappHref ?? "#"}
-		class="font-editorial rounded-full bg-bitter-chocolate px-6 py-3 text-sm font-bold text-white"
+		class="font-editorial flex items-center gap-2 rounded-full bg-bitter-chocolate px-6 py-3 text-sm font-bold text-white"
 	>
+		{/* MessageCircle, no el logo de WhatsApp: Lucide (el set de íconos que ya
+		    usa el sitio, ver ChevronDown en CourseArchive.astro) no incluye
+		    logos de marca, solo íconos genéricos — este es el más cercano. */}
+		<MessageCircle class="h-4 w-4" aria-hidden="true" />
 		Hablar con Pantu
 	</a>
 </section>

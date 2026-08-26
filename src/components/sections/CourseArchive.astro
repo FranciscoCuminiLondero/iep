@@ -1,33 +1,188 @@
 ---
 import { courseRepository } from "../../lib/courses/local.repository";
+import FigureCutout from "../collage/FigureCutout.astro";
+import NextSectionLink from "../ui/NextSectionLink.astro";
+import CourseAccordionItem from "../course/CourseAccordionItem.astro";
+import { ChevronDown } from "lucide-astro";
 
 const pastCourses = await courseRepository.getPast();
 
-const byYear = Map.groupBy(pastCourses, (course) => course.year);
-const years = [...byYear.keys()].sort((a, b) => b - a);
+// Cada sección ocupa la pantalla completa (min-h-screen) — con más cursos de
+// los que entran en un viewport típico, el resto queda detrás de un "ver
+// más" en vez de estirar la sección sin límite. VISIBLE_COUNT es una
+// heurística (~lo que entra en una laptop común), no una regla exacta.
+const VISIBLE_COUNT = 6;
+const visibleCourses = pastCourses.slice(0, VISIBLE_COUNT);
+const restCourses = pastCourses.slice(VISIBLE_COUNT);
 ---
 
-<!-- BRIEF.md §04/§17 — Archivo de cursos, agrupado por año (DESIGN.md §6.4). -->
+<!-- BRIEF.md §04/§17 — Archivo de cursos (DESIGN.md §6.4). La mayoría de estos
+     cursos están "todavía activos" (sin fecha puntual, ver Course.order), así
+     que ya no se agrupan por año — lista plana, en el orden dado. Cada fila
+     es un <details> nativo (CourseAccordionItem): desplegable al tocar, sin
+     JS, accesible por default (teclado, lectores de pantalla). El "ver más"
+     de abajo es el mismo patrón, aplicado a la lista entera. -->
 <!-- TODO: sin buscador/filtros hasta que el volumen de cursos lo justifique (BRIEF.md §18). -->
-<section id="archivo" class="flex flex-col items-center gap-10 bg-white px-6 py-20">
+<!-- Bauman = "personaje-recorte" (FigureCutout), pareja de Freud en About.astro:
+     forman la transición de dos figuras Quiénes somos → Archivo (una a cada
+     lado). Se corta por el borde izquierdo y arranca antes del límite de
+     esta sección (top negativo) para cruzar hacia arriba, sobre "Quiénes
+     somos" — al venir después en el DOM ya pinta encima de la sección
+     anterior, sin necesitar z-index para ESO (eso pasa a nivel de las
+     secciones, afuera del stacking context de #archivo — no depende de lo
+     que se explica abajo).
+
+     -z-10 en TODOS los tamaños (se había sacado pensando que venir antes
+     que el h2/párrafo/lista en el DOM alcanzaba para pintar detrás — CORREGIDO:
+     no alcanza. El algoritmo de pintado de CSS pinta primero los
+     descendientes normales/no posicionados (el h2, en flujo normal) y
+     RECIÉN DESPUÉS los descendientes posicionados con z-index:auto (este
+     FigureCutout, que es absolute) — el orden del DOM entre ellos no
+     importa una vez que uno está posicionado y el otro no. Por eso en
+     mobile/tablet, donde el título queda cerca de esta esquina, Bauman
+     terminaba tapándolo. -z-10 mete a Bauman en un stacking context hijo
+     con nivel NEGATIVO, que sí pinta antes que cualquier contenido normal
+     de la sección — ahora queda detrás del título, párrafo y lista en
+     cualquier tamaño. `isolate` en la sección (ver más abajo) es lo que
+     acota esa competencia a los hijos de #archivo.
+
+     Offset de cruce MÁS A LA IZQUIERDA en mobile (-left-20, no -left-14):
+     se pidió priorizar que no tape el título aunque implique perder más
+     imagen por el borde del viewport. En tablet ese mismo -left-20 la
+     saca ENTERA de pantalla (h-16 mide ~67.5px de ancho, bastante menos
+     que h-48), así que ahí usa su propio offset (sm:-left-14 = -56px,
+     medido: deja ~11.5px de la imagen visibles) — bastante más a la
+     izquierda que el sm:-left-8 anterior, al borde de desaparecer del
+     todo pero sin cruzar esa línea. Ninguno de los dos llega al -left-28
+     de desktop (pensado para una versión mucho más ancha, h-[56vh]) — con
+     las versiones chicas de mobile/tablet ese offset completo la deja
+     ENTERA fuera del viewport (comprobado antes: right:-11px, ni un
+     píxel visible).
+
+     Tamaño h-48 en mobile (el doble de la h-24 original, para que se note
+     más) y sm:h-16 en tablet (la mitad de esa h-32 original, para que en
+     esa franja intermedia no compita tanto con el encabezado). -->
+
+<!-- md:sticky md:top-0, mismo efecto "cards" que Hero/Próximo curso/Quiénes
+     somos (containing block compartido en index.astro, incluyendo a Pantu
+     — ver comentario ahí): Pantu, al venir después, tapa esta sección
+     entera mientras queda pegada.
+
+     PERO con dos fallbacks, porque mientras está pegada el contenido NO
+     scrollea internamente — lo que no entra en esa pantalla queda
+     inalcanzable hasta que la tapa Pantu:
+     1. SOLO desde md — ver comentario en Hero.astro: en mobile, incluso
+        colapsada (VISIBLE_COUNT=6 + encabezado) esta sección mide 918px
+        contra ~842px de viewport (medido) — ya se pasa de una pantalla
+        antes de tocar nada.
+     2. La regla :has() de abajo, para cuando SÍ hay espacio (md+) pero se
+        abre "ver más" o el temario de un curso (<details>): ahí igual
+        puede superar el alto de pantalla, y apaga el sticky mientras haya
+        algo abierto — vuelve a scroll normal, reachable, hasta que se
+        cierra todo de nuevo.
+
+     `isolate`: necesario para que el -z-10 de Bauman (más abajo) quede
+     acotado a esta sección en vez de escaparse al contexto raíz de la
+     página — ver la explicación completa en el comentario de Freud, en
+     About.astro (mismo problema exacto: position:relative sin z-index no
+     crea contexto de stacking propio, a diferencia de sticky). -->
+<section id="archivo" class="relative isolate flex min-h-screen flex-col items-center justify-center gap-10 bg-white px-6 py-20 md:sticky md:top-0">
+	<FigureCutout
+		src="/images/Zygmunt-Bauman.png"
+		alt="Retrato de Zygmunt Bauman"
+		class="absolute -top-8 -left-20 -z-10 h-48 sm:-left-14 sm:h-16 md:-top-16 md:-left-28 md:h-[56vh]"
+	/>
 	<h2 class="font-identity text-[clamp(1.5rem,4.5vw,2.5rem)] font-extrabold text-carbon-black uppercase">
 		Archivo de cursos
 	</h2>
-	<div class="flex w-full max-w-[720px] flex-col gap-8">
+	<p class="font-editorial -mt-6 max-w-[50ch] text-sm text-carbon-black/60">
+		Todos estos cursos siguen disponibles — podés solicitarlos para hacerlos cuando quieras.
+	</p>
+	<ul class="flex w-full max-w-2xl flex-col">
+		{visibleCourses.map((course) => <CourseAccordionItem course={course} />)}
 		{
-			years.map((year) => (
-				<div>
-					<p class="font-identity mb-3 text-xl font-bold text-carbon-black">{year}</p>
-					<ul class="flex flex-col gap-3">
-						{byYear.get(year)!.map((course) => (
-							<li class="font-editorial flex items-baseline justify-between gap-4 border-b border-(--ink-15) pb-3 text-carbon-black">
-								<span class="font-bold">{course.title}</span>
-								<span class="shrink-0 text-sm text-carbon-black/45">{course.date}</span>
-							</li>
-						))}
-					</ul>
-				</div>
-			))
+			restCourses.length > 0 && (
+				<li>
+					{/* <summary> tiene que ser el primer hijo en el DOM — si no, el
+					    navegador deja de reconocerlo como el control del <details> y
+					    genera uno propio. El reordenamiento visual (resumen abajo,
+					    debajo de las filas que revela) es solo con flex + order,
+					    nunca tocando el orden real del markup. */}
+					<details class="group flex flex-col py-4">
+						<summary class="order-2 mt-4 flex cursor-pointer list-none items-center justify-center gap-2 text-center">
+							{/* Dos textos, uno tapa al otro según el estado — sin JS,
+							    con group-open (el group es el propio <details>). */}
+							<span class="font-editorial text-sm font-bold text-bitter-chocolate group-open:hidden">Ver {restCourses.length} cursos más</span>
+							<span class="font-editorial hidden text-sm font-bold text-bitter-chocolate group-open:inline">Ocultar {restCourses.length} cursos</span>
+							<ChevronDown class="h-4 w-4 text-bitter-chocolate transition-transform group-open:rotate-180" aria-hidden="true" />
+						</summary>
+						<ul class="order-1 flex flex-col">
+							{restCourses.map((course) => (
+								<CourseAccordionItem course={course} />
+							))}
+						</ul>
+					</details>
+				</li>
+			)
 		}
-	</div>
+	</ul>
+	<NextSectionLink target="pantu" label="Ir a Pantu" />
 </section>
+
+<style is:global>
+	/* Apaga el sticky de #archivo apenas hay algún <details> abierto adentro
+	   (un curso desplegado, o el "ver más" que revela el resto de la lista)
+	   — ver comentario junto al <section> más arriba. relative, no static:
+	   Bauman (absolute) sigue necesitando a esta sección como containing
+	   block — con static, se recalcularía contra el próximo ancestro
+	   posicionado (el wrapper de las 5 secciones en index.astro) y
+	   aparecería en cualquier lado. Vuelve a sticky apenas se cierra todo. */
+	#archivo:has(details[open]) {
+		position: relative;
+	}
+
+	/* Oculta el triángulo nativo del <summary> en todos los navegadores —
+	   el chevron de Lucide ya cumple esa función. */
+	summary::-webkit-details-marker {
+		display: none;
+	}
+
+	/* Tipografía del body renderizado desde Markdown (temario + bio del
+	   disertante) — set:html no pasa por el scoping de Astro, por eso va
+	   con is:global apuntando a la clase del wrapper. */
+	.course-details {
+		font-family: var(--font-lato);
+		color: var(--ink-70);
+		font-size: 1rem;
+		line-height: 1.6;
+	}
+
+	.course-details h3 {
+		font-family: var(--font-montserrat);
+		font-weight: 700;
+		color: var(--carbon-black);
+		margin-top: 1rem;
+	}
+
+	.course-details h3:first-child {
+		margin-top: 0;
+	}
+
+	.course-details p {
+		margin-top: 0.75rem;
+	}
+
+	.course-details ul {
+		margin-top: 0.75rem;
+		padding-left: 1.25rem;
+		list-style: disc;
+	}
+
+	.course-details li + li {
+		margin-top: 0.25rem;
+	}
+
+	.course-details strong {
+		color: var(--carbon-black);
+	}
+</style>
