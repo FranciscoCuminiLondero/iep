@@ -1,25 +1,50 @@
 ---
 import { site } from "../../data/site";
 
-// TODO: extraer a src/lib/whatsapp/messages.ts cuando se construya el CTA
-// definitivo (mensaje prearmado genérico vs. por curso — VOICE.md §3.4).
-const defaultMessage = "Hola, quería consultar por los cursos de IEP.";
-const whatsappHref = site.whatsappPhone
-	? `https://wa.me/${site.whatsappPhone}?text=${encodeURIComponent(defaultMessage)}`
-	: undefined;
+const navLinks = [
+	{ label: "Inicio", href: "#hero" },
+	{ label: "Próximo curso", href: "#proximo-curso" },
+	{ label: "Quiénes somos", href: "#quienes-somos" },
+	{ label: "Archivo", href: "#archivo" },
+];
 ---
 
-<!-- BRIEF.md §06 — Cierre: CTA principal a WhatsApp + Instagram + info mínima. -->
-<footer id="contacto" class="flex flex-col items-center gap-4 bg-white-2 px-6 py-16 text-center">
-	<p class="font-identity text-lg font-bold text-carbon-black uppercase">¿Tenés una pregunta?</p>
-	<a
-		href={whatsappHref ?? "#"}
-		class="font-editorial rounded-full bg-carbon-black px-6 py-3 text-sm font-bold text-white"
-	>
-		Consultar por WhatsApp
+<!-- BRIEF.md §06 — Cierre. Fondo bordó (a diferencia de todas las secciones
+     de arriba, blancas) para que se lea como footer, no como una sección
+     más — pedido puntual de diseño, aunque DESIGN.md §1.3 en general reserva
+     el bordó para acentos chicos, no fondos grandes; acá se hace una
+     excepción porque el footer es un cierre acotado, no una sección de
+     contenido. Sin CTA de WhatsApp: el de Pantu, arriba, ya cumple esa
+     función (BRIEF.md §23 — evitar que el botón verde/CTA se repita como si
+     fuera el color dominante). Solo logo + navegación + contacto. -->
+<footer id="contacto" class="flex flex-col items-center gap-6 bg-bitter-chocolate px-6 py-12 text-center">
+	<a href="#hero" aria-label={`Volver arriba — ${site.name}`}>
+		<img src="/images/logo-iep.jpg" alt={site.name} class="h-10 w-10 rounded-sm" />
 	</a>
-	<a href={site.instagramUrl} class="font-editorial text-sm text-carbon-black/70" target="_blank" rel="noopener">
-		Instagram
-	</a>
-	<p class="font-editorial text-xs text-carbon-black/45">{site.name}</p>
+	<nav aria-label="Secciones" class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+		{
+			navLinks.map((link) => (
+				<a href={link.href} class="font-editorial text-sm text-white/70 transition-colors hover:text-white">
+					{link.label}
+				</a>
+			))
+		}
+	</nav>
+	<div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+		<a href={site.instagramUrl} target="_blank" rel="noopener" class="font-editorial text-sm text-white/70 transition-colors hover:text-white">
+			{site.instagramHandle}
+		</a>
+		{
+			site.whatsappPhone && (
+				<a
+					href={`https://wa.me/${site.whatsappPhone}`}
+					target="_blank"
+					rel="noopener"
+					class="font-editorial text-sm text-white/70 transition-colors hover:text-white"
+				>
+					+{site.whatsappPhone}
+				</a>
+			)
+		}
+	</div>
 </footer>
