@@ -1,13 +1,19 @@
 ---
 // Índice flotante de secciones — aparece recién al salir del Hero (mismo
 // patrón de IntersectionObserver que el logo de Header.astro: observa
-// #hero, toggle por data-attribute, sin animación si prefers-reduced-motion
-// porque ya está cubierto por la regla global). rootMargin recorta el 50%
-// SUPERIOR del área de detección, dejando como "root" solo la mitad de
-// abajo del viewport — el Hero deja de intersectarla apenas su borde
-// inferior sube por encima de la mitad de la pantalla (si no, con
-// min-h-screen y contenido más bajo que la pantalla, queda un relleno
-// vacío que había que scrollear de más). Fijo del lado
+// #hero-end, NO #hero, toggle por data-attribute, sin animación si
+// prefers-reduced-motion porque ya está cubierto por la regla global).
+// #hero-end es un sentinel de 1px agregado en index.astro justo después de
+// <Hero />: hace falta porque desde md: Hero es sticky y queda
+// geométricamente "intersectando" el viewport durante casi todo el scroll
+// de la página aunque las secciones siguientes lo tapen visualmente —
+// observar #hero directo nunca dispara el cambio y este índice queda
+// oculto para siempre (ver comentario completo en Header.astro). rootMargin
+// recorta el 50% SUPERIOR del área de detección, dejando como "root" solo
+// la mitad de abajo del viewport — el sentinel deja de intersectarla apenas
+// cruza la mitad de la pantalla (si no, con min-h-screen y contenido más
+// bajo que la pantalla, queda un relleno vacío que había que scrollear de
+// más). Fijo del lado
 // izquierdo, alineado con el margen de contenido del layout (mismos insets
 // que el padding lateral de las secciones, DESIGN.md §3.3). Oculto en
 // mobile — poco espacio lateral, prioridad al contenido. También se oculta
@@ -42,7 +48,7 @@ const sections = [
 
 <script>
 	const index = document.getElementById("section-index");
-	const hero = document.getElementById("hero");
+	const hero = document.getElementById("hero-end");
 	const footer = document.getElementById("contacto");
 
 	if (index && hero && footer) {

@@ -5,14 +5,21 @@ import { site } from "../../data/site";
 <!-- El logo del Hero (Hero.astro) ya cubre la identidad en el primer scroll.
      Este vuelve a aparecer, fijo arriba, recién cuando el Hero sale del
      viewport — funciona como "volver arriba", no como nav permanente.
-     IntersectionObserver sobre #hero: es la misma lógica de revelado que
-     propone ARCHITECTURE.md §22 (IntersectionObserver → estado → CSS), acá
-     resuelta inline por ser un caso puntual de un solo componente.
-     rootMargin recorta el 50% SUPERIOR del área de detección, dejando como
-     "root" solo la mitad de abajo del viewport — el Hero deja de
-     intersectarla (dispara el cambio) apenas su borde inferior sube por
-     encima de la mitad de la pantalla, sin esperar a que salga del todo
-     (con min-h-screen, si el contenido es más bajo que la pantalla queda un
+     IntersectionObserver sobre #hero-end (NO sobre #hero): es la misma
+     lógica de revelado que propone ARCHITECTURE.md §22 (IntersectionObserver
+     → estado → CSS), acá resuelta inline por ser un caso puntual de un solo
+     componente. #hero-end es un sentinel de 1px agregado en index.astro
+     justo después de <Hero />, dentro del mismo wrapper — hace falta porque
+     desde md: Hero es sticky (ver su comentario) y queda geométricamente
+     "intersectando" el viewport durante casi todo el scroll de la página,
+     aunque las secciones siguientes lo tapen visualmente; observar #hero
+     directo nunca dispara el cambio y este header queda oculto para
+     siempre. El sentinel, al no ser sticky, sí sale del viewport apenas
+     Hero deja de verse. rootMargin recorta el 50% SUPERIOR del área de
+     detección, dejando como "root" solo la mitad de abajo del viewport —
+     el sentinel deja de intersectarla (dispara el cambio) apenas cruza la
+     mitad de la pantalla, sin esperar a que salga del todo (con
+     min-h-screen, si el contenido es más bajo que la pantalla queda un
      relleno vacío que si no hay que scrollear de más). Ojo si se vuelve a
      tocar: recortar el margen INFERIOR en vez del superior invierte la
      lógica (deja como "root" la mitad de ARRIBA) y el bug vuelve.
@@ -35,7 +42,7 @@ import { site } from "../../data/site";
 
 <script>
 	const header = document.getElementById("site-header");
-	const hero = document.getElementById("hero");
+	const hero = document.getElementById("hero-end");
 	const footer = document.getElementById("contacto");
 
 	if (header && hero && footer) {

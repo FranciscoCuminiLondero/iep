@@ -33,6 +33,17 @@ import PantuCTA from "../components/sections/PantuCTA.astro";
 		     del Footer para siempre). -->
 		<div class="relative">
 			<Hero />
+			<!-- Sentinel para Header.astro/SectionIndex.astro: NO puede observarse
+			     #hero directamente porque desde md: Hero es sticky compartiendo
+			     containing block con todo este wrapper (ver comentario de arriba),
+			     así que geométricamente sigue "intersectando" el viewport durante
+			     casi todo el scroll de la página aunque las secciones siguientes
+			     lo tapen visualmente — un IntersectionObserver sobre #hero nunca
+			     se dispara y el logo flotante/índice quedan ocultos para siempre.
+			     Este div en cambio NO es sticky: ocupa el punto exacto donde
+			     termina el espacio propio de Hero en el flujo normal, así que
+			     sale del viewport apenas Hero deja de verse (esté tapado o no). -->
+			<div id="hero-end" class="h-px w-full" aria-hidden="true"></div>
 			<UpcomingCourse />
 			<About />
 			<CourseArchive />
