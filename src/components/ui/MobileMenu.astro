@@ -4,10 +4,12 @@ import { Menu, X } from "lucide-astro";
 // Equivalente mobile de SectionIndex.astro (oculto en mobile por falta de
 // espacio lateral, ver su comentario) — acá el mismo listado de secciones,
 // pero como menú desplegable detrás de un botón hamburguesa fijo en la
-// esquina superior derecha. A diferencia del logo de Header.astro y del
-// índice de escritorio, este botón está SIEMPRE visible (no depende de
-// salir del Hero): en mobile es el único acceso a navegación directa antes
-// de scrollear, así que tiene que estar disponible desde el principio.
+// esquina superior derecha. Mismo criterio de aparición que el logo de
+// Header.astro y el índice de escritorio: oculto mientras se ve el Hero
+// (ya tiene su propio logo/identidad, este botón sería redundante ahí) y
+// también al llegar al Footer (que ya tiene su propia navegación) — ver el
+// comentario de Header.astro para el detalle completo del
+// IntersectionObserver sobre #hero-end (NO #hero, por el sticky de md:).
 // z-30, por encima del logo flotante y del índice (z-20, ninguno de los
 // dos visible en mobile de todos modos) — no compite con los z-index de
 // las figuras de collage (Freud, Bauman, libros) porque esas viven dentro
@@ -21,7 +23,11 @@ const sections = [
 ];
 ---
 
-<div class="fixed top-4 right-4 z-30 md:hidden">
+<div
+	id="mobile-menu"
+	data-visible="false"
+	class="pointer-events-none fixed top-4 right-4 z-30 opacity-0 transition-opacity duration-300 data-[visible=true]:pointer-events-auto data-[visible=true]:opacity-100 md:hidden"
+>
 	<button
 		id="mobile-menu-button"
 		type="button"
@@ -55,12 +61,13 @@ const sections = [
 </div>
 
 <script>
+	const wrapper = document.getElementById("mobile-menu");
 	const button = document.getElementById("mobile-menu-button");
 	const panel = document.getElementById("mobile-menu-panel");
 	const menuIcon = button?.querySelector('[data-icon="menu"]');
 	const closeIcon = button?.querySelector('[data-icon="close"]');
 
-	if (button && panel) {
+	if (wrapper && button && panel) {
 		const setOpen = (open: boolean) => {
 			panel.dataset.open = String(open);
 			button.setAttribute("aria-expanded", String(open));
@@ -91,5 +98,47 @@ const sections = [
 		panel.querySelectorAll("a").forEach((link) => {
 			link.addEventListener("click", () => setOpen(false));
 		});
+	}
+
+	// Mismo patrón que Header.astro/SectionIndex.astro: oculto mientras se ve
+	// el Hero (o su sentinel #hero-end, ver ese comentario) y también al
+	// llegar al Footer. Si el botón se oculta con el menú abierto (por scroll
+	// programático, p. ej.), lo cerramos para no dejar un panel flotando sin
+	// su botón visible.
+	const hero = document.getElementById("hero-end");
+	const footer = document.getElementById("contacto");
+
+	if (wrapper && hero && footer) {
+		let heroVisible = true;
+		let footerVisible = false;
+
+		const updateVisibility = () => {
+			const visible = !(heroVisible || footerVisible);
+			wrapper.dataset.visible = String(visible);
+			if (!visible && panel?.dataset.open === "true") {
+				panel.dataset.open = "false";
+				button?.setAttribute("aria-expanded", "false");
+				menuIcon?.classList.remove("hidden");
+				closeIcon?.classList.add("hidden");
+			}
+		};
+
+		const heroObserver = new IntersectionObserver(
+			([entry]) => {
+				heroVisible = entry.isIntersecting;
+				updateVisibility();
+			},
+			{ threshold: 0, rootMargin: "-50% 0px 0px 0px" },
+		);
+		heroObserver.observe(hero);
+
+		const footerObserver = new IntersectionObserver(
+			([entry]) => {
+				footerVisible = entry.isIntersecting;
+				updateVisibility();
+			},
+			{ threshold: 0 },
+		);
+		footerObserver.observe(footer);
 	}
 </script>
