@@ -1,0 +1,95 @@
+---
+import { Menu, X } from "lucide-astro";
+
+// Equivalente mobile de SectionIndex.astro (oculto en mobile por falta de
+// espacio lateral, ver su comentario) — acá el mismo listado de secciones,
+// pero como menú desplegable detrás de un botón hamburguesa fijo en la
+// esquina superior derecha. A diferencia del logo de Header.astro y del
+// índice de escritorio, este botón está SIEMPRE visible (no depende de
+// salir del Hero): en mobile es el único acceso a navegación directa antes
+// de scrollear, así que tiene que estar disponible desde el principio.
+// z-30, por encima del logo flotante y del índice (z-20, ninguno de los
+// dos visible en mobile de todos modos) — no compite con los z-index de
+// las figuras de collage (Freud, Bauman, libros) porque esas viven dentro
+// de secciones con `isolate`, que acota su stacking al propio contenedor.
+const sections = [
+	{ label: "Inicio", href: "#hero" },
+	{ label: "Próximo curso", href: "#proximo-curso" },
+	{ label: "Sobre nosotros", href: "#quienes-somos" },
+	{ label: "Archivo", href: "#archivo" },
+	{ label: "Pantu", href: "#pantu" },
+];
+---
+
+<div class="fixed top-4 right-4 z-30 md:hidden">
+	<button
+		id="mobile-menu-button"
+		type="button"
+		aria-haspopup="true"
+		aria-expanded="false"
+		aria-controls="mobile-menu-panel"
+		aria-label="Abrir menú de secciones"
+		class="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-carbon-black shadow-md backdrop-blur-sm"
+	>
+		<Menu class="h-5 w-5" aria-hidden="true" data-icon="menu" />
+		<X class="hidden h-5 w-5" aria-hidden="true" data-icon="close" />
+	</button>
+
+	<nav
+		id="mobile-menu-panel"
+		data-open="false"
+		aria-label="Secciones de la página"
+		class="pointer-events-none absolute top-12 right-0 w-48 origin-top-right scale-95 rounded-lg bg-white p-2 opacity-0 shadow-lg transition-[opacity,transform] duration-200 data-[open=true]:pointer-events-auto data-[open=true]:scale-100 data-[open=true]:opacity-100"
+	>
+		{
+			sections.map((section) => (
+				<a
+					href={section.href}
+					class="font-editorial block rounded px-3 py-2 text-xs font-bold tracking-[0.05em] text-carbon-black/70 uppercase transition-colors hover:bg-carbon-black/5 hover:text-bitter-chocolate"
+				>
+					{section.label}
+				</a>
+			))
+		}
+	</nav>
+</div>
+
+<script>
+	const button = document.getElementById("mobile-menu-button");
+	const panel = document.getElementById("mobile-menu-panel");
+	const menuIcon = button?.querySelector('[data-icon="menu"]');
+	const closeIcon = button?.querySelector('[data-icon="close"]');
+
+	if (button && panel) {
+		const setOpen = (open: boolean) => {
+			panel.dataset.open = String(open);
+			button.setAttribute("aria-expanded", String(open));
+			menuIcon?.classList.toggle("hidden", open);
+			closeIcon?.classList.toggle("hidden", !open);
+		};
+
+		button.addEventListener("click", () => {
+			setOpen(panel.dataset.open !== "true");
+		});
+
+		// Cierra al clickear afuera (pero no al clickear el botón, que ya
+		// tiene su propio toggle arriba) y con Escape — patrón estándar de
+		// menú desplegable accesible.
+		document.addEventListener("click", (event) => {
+			const target = event.target;
+			if (panel.dataset.open === "true" && target instanceof Node && !panel.contains(target) && !button.contains(target)) {
+				setOpen(false);
+			}
+		});
+
+		document.addEventListener("keydown", (event) => {
+			if (event.key === "Escape") setOpen(false);
+		});
+
+		// Cierra al navegar: son anchors a la misma página (#hero, etc.), no
+		// tiene sentido dejar el menú abierto tapando el destino del scroll.
+		panel.querySelectorAll("a").forEach((link) => {
+			link.addEventListener("click", () => setOpen(false));
+		});
+	}
+</script>
