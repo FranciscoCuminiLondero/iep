@@ -1,0 +1,92 @@
+---
+// Sin markup propio — solo el script de abajo. Centraliza la navegación por
+// hash a las 5 secciones (#hero, #proximo-curso, #quienes-somos, #archivo,
+// #pantu) para TODOS los links que apuntan a ellas en el sitio (SectionIndex,
+// MobileMenu, el logo de Header/Footer, NextSectionLink) sin tener que tocar
+// cada componente: delega el click a nivel de document.
+//
+// Por qué hace falta (no alcanza con dejarlo en manos del navegador):
+// Hero, Próximo curso, Quiénes somos y Archivo son md:sticky (efecto
+// "cards", ver Hero.astro) — una vez que una de esas secciones ya quedó
+// pegada en top:0, su propio getBoundingClientRect().top da 0 aunque una
+// sección posterior la tape visualmente en pantalla. Un <a href="#id"> plano
+// hace que el navegador la vea "ya visible" en ese caso y no mueva el scroll
+// nada: funciona al bajar a una sección todavía no alcanzada, pero falla en
+// silencio al volver a una ya pasada — el bug intermitente reportado en
+// desktop (el único breakpoint con sticky; en mobile/tablet ninguna sección
+// es sticky, por eso ahí siempre funcionó). Los sentinels en index.astro
+// (#hero-end, #proximo-curso-end, #quienes-somos-end) NO son sticky, así que
+// siempre reflejan la posición real en el documento sin importar qué esté
+// pegado encima — se usan como destino real en lugar de la sección sticky.
+//
+// De paso, esto reemplaza el scroll-behavior:smooth nativo (duración/curva
+// fija del navegador) por una animación propia con la curva y duración de
+// marca (--ease-editorial, --duration-slow en tokens.css) — de acá el
+// pedido de transiciones "más suaves" entre secciones.
+const targets: Record<string, string | null> = {
+	hero: null, // null = tope real de la página (siempre scrollY 0, Hero es el primer elemento)
+	"proximo-curso": "hero-end",
+	"quienes-somos": "proximo-curso-end",
+	archivo: "quienes-somos-end",
+	pantu: "pantu", // Pantu no es sticky: su propia posición ya es siempre confiable
+};
+---
+
+<script define:vars={{ targets }} is:inline>
+	const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+	// cubic-bezier(0.22, 1, 0.36, 1) de tokens.css (--ease-editorial), la
+	// misma curva que el resto de las transiciones del sitio — aproximada acá
+	// a mano porque rAF no puede evaluar cubic-bezier() directamente.
+	function easeEditorial(t) {
+		const p0 = 0,
+			p1 = 0.22,
+			p2 = 0.36,
+			p3 = 1;
+		// De Casteljau sobre los puntos de control Y (X se usa solo para
+		// resolver t en curvas CSS reales; para una animación de scroll simple
+		// alcanza con aplicar la curva directamente sobre el tiempo).
+		const u = 1 - t;
+		return 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3 + u * u * u * p0;
+	}
+
+	function animatedScrollTo(targetY) {
+		const startY = window.scrollY;
+		const diff = targetY - startY;
+		if (Math.abs(diff) < 1) return;
+
+		if (prefersReducedMotion) {
+			window.scrollTo({ top: targetY, left: 0, behavior: "instant" });
+			return;
+		}
+
+		const duration = 600; // --duration-slow, tokens.css
+		const start = performance.now();
+
+		function step(now) {
+			const elapsed = now - start;
+			const t = Math.min(elapsed / duration, 1);
+			window.scrollTo({ top: startY + diff * easeEditorial(t), left: 0, behavior: "instant" });
+			if (t < 1) requestAnimationFrame(step);
+		}
+		requestAnimationFrame(step);
+	}
+
+	document.addEventListener("click", (event) => {
+		const target = event.target;
+		if (!(target instanceof Element)) return;
+		const link = target.closest("a[href^='#']");
+		if (!link) return;
+
+		const id = link.getAttribute("href")?.slice(1);
+		if (!id || !(id in targets)) return; // no es una de las 5 secciones conocidas: comportamiento nativo sin tocar
+
+		event.preventDefault();
+
+		const sentinelId = targets[id];
+		const targetY = sentinelId === null ? 0 : (document.getElementById(sentinelId)?.getBoundingClientRect().top ?? 0) + window.scrollY;
+
+		animatedScrollTo(targetY);
+		history.pushState(null, "", `#${id}`);
+	});
+</script>

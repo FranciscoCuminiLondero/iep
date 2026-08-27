@@ -4,6 +4,7 @@ import Header from "../components/layout/Header.astro";
 import Footer from "../components/layout/Footer.astro";
 import SectionIndex from "../components/ui/SectionIndex.astro";
 import MobileMenu from "../components/ui/MobileMenu.astro";
+import ScrollNav from "../components/ui/ScrollNav.astro";
 import Hero from "../components/sections/Hero.astro";
 import UpcomingCourse from "../components/sections/UpcomingCourse.astro";
 import About from "../components/sections/About.astro";
@@ -16,6 +17,7 @@ import PantuCTA from "../components/sections/PantuCTA.astro";
 	<Header />
 	<SectionIndex />
 	<MobileMenu />
+	<ScrollNav />
 	<main>
 		<!-- Hero, Próximo curso, Quiénes somos Y Archivo son sticky top-0 (ver
 		     comentario en Hero.astro y en CourseArchive.astro) — el efecto
@@ -35,19 +37,33 @@ import PantuCTA from "../components/sections/PantuCTA.astro";
 		     del Footer para siempre). -->
 		<div class="relative">
 			<Hero />
-			<!-- Sentinel para Header.astro/SectionIndex.astro: NO puede observarse
-			     #hero directamente porque desde md: Hero es sticky compartiendo
-			     containing block con todo este wrapper (ver comentario de arriba),
-			     así que geométricamente sigue "intersectando" el viewport durante
-			     casi todo el scroll de la página aunque las secciones siguientes
-			     lo tapen visualmente — un IntersectionObserver sobre #hero nunca
-			     se dispara y el logo flotante/índice quedan ocultos para siempre.
-			     Este div en cambio NO es sticky: ocupa el punto exacto donde
-			     termina el espacio propio de Hero en el flujo normal, así que
-			     sale del viewport apenas Hero deja de verse (esté tapado o no). -->
+			<!-- Sentinels NO sticky entre cada card, con doble uso:
+			     1) Header.astro/SectionIndex.astro/MobileMenu.astro los observan
+			        para mostrar/ocultar su UI (no pueden observar la sección sticky
+			        misma: comparte containing block con todo este wrapper — ver
+			        comentario en Hero.astro — así que geométricamente sigue
+			        "intersectando" el viewport durante casi todo el scroll aunque
+			        las siguientes la tapen visualmente, y el observer nunca se
+			        dispararía).
+			     2) ScrollNav.astro los usa como destino real al navegar por hash
+			        (#proximo-curso, #quienes-somos) en vez de la sección sticky
+			        misma, por el MISMO motivo: una vez que una sección sticky ya
+			        quedó "pegada" en top:0, su propio getBoundingClientRect().top
+			        se mide en 0 aunque esté tapada por otra más adelante en el
+			        scroll — un <a href="#quienes-somos"> apuntando directo a esa
+			        sección hace que el navegador la vea "ya visible" y no mueva el
+			        scroll nada, aunque en pantalla se siga viendo la sección
+			        siguiente tapándola. Esto es lo que reportaba el índice
+			        fallando "a veces sí, a veces no" en desktop (el único breakpoint
+			        con sticky): funcionaba al bajar a una sección todavía no
+			        alcanzada, y fallaba en silencio al volver a una ya pasada. Estos
+			        sentinels, al no ser sticky, siempre reflejan su posición real en
+			        el documento sin importar qué esté pegado encima. -->
 			<div id="hero-end" class="h-px w-full" aria-hidden="true"></div>
 			<UpcomingCourse />
+			<div id="proximo-curso-end" class="h-px w-full" aria-hidden="true"></div>
 			<About />
+			<div id="quienes-somos-end" class="h-px w-full" aria-hidden="true"></div>
 			<CourseArchive />
 			<PantuCTA />
 		</div>
