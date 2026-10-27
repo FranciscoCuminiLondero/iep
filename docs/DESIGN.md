@@ -17,10 +17,12 @@ Este documento traduce el brief conceptual (`BRIEF.md`) en decisiones de diseño
   --white: #ffffff;
   --white-2: #fefcfd;
   --white-3: #fdfdfd;
-  --bitter-chocolate: #783030;
+  --bitter-chocolate: #783131;
   --carbon-black: #181818;
 }
 ```
+
+> Corrección de valor: el bordó se fijó en `#783131` (antes se venía usando `#783030` como aproximación). Actualizar el token en `tokens.css` y en cualquier CSS que lo haya hardcodeado.
 
 ### 1.2 Rol semántico de cada token
 
@@ -34,17 +36,32 @@ Este documento traduce el brief conceptual (`BRIEF.md`) en decisiones de diseño
 
 > Nota: el brief habla de "bordó"; `--bitter-chocolate` (#783030) es ese bordó. Se usa ese nombre de token en el código para que el sistema no quede atado a una palabra de paleta que después puede cambiar de matiz.
 
-### 1.3 Regla de uso — proporción
+### 1.3 Regla de uso — proporción (revisada)
 
-Siguiendo la sección 5 del brief ("el bordó no debe utilizarse como relleno constante, debe funcionar como color de énfasis"):
+> **Actualización de decisión:** la regla original de este documento (bordó solo como acento, ~5%, nunca como fondo de sección) queda **reemplazada** por una decisión posterior del equipo: la página alterna secciones completas de fondo bordó y fondo blanco a lo largo de todo el sitio, empezando por el Hero en bordó. Se documenta acá el estado vigente; la versión anterior queda como referencia histórica de por qué existe la regla del punto 1 del `BACKLOG.md` (el collage de autores en blanco y negro sigue sin llevar bordó — esa regla no cambia, es independiente de esto).
+
+```text
+Patrón de alternancia de secciones (de arriba hacia abajo):
+  Hero                    → fondo --bitter-chocolate
+  Próximo curso           → fondo --white
+  Nuestros cursos         → fondo --bitter-chocolate (o el que siga en la alternancia)
+  ¿Buscás un tema...?     → alterna según posición
+  Sobre nosotros          → alterna según posición
+```
+
+Reglas para las secciones con fondo bordó:
+
+- **Texto sobre fondo bordó siempre en `--white`** — nunca `--carbon-black` sobre bordó (falla de contraste, además de no estar en el sistema).
+- El collage de autores/retratos en blanco y negro (`BACKLOG.md` punto 1) se mantiene sin bordó **incluso dentro de una sección de fondo bordó** — si una sección con retratos queda en un turno bordó de la alternancia, resolver con una subsección de fondo blanco/negro que interrumpa el bordó puntualmente, no aplicar el retrato directamente sobre bordó.
+- Los acentos puntuales (hooks, etiquetas, CTA) descriptos abajo siguen aplicando **dentro de las secciones de fondo blanco** — ahí el bordó sigue funcionando como acento, no como relleno.
+
+Dentro de una sección de fondo **blanco**, se mantiene la proporción original:
 
 ```text
 ~70%  --white / --white-2 / --white-3   → fondos, aire, espacio negativo
 ~25%  --carbon-black                    → texto, estructura, contraste
 ~5%   --bitter-chocolate                → acento: hooks, CTA, detalles
 ```
-
-Ningún fondo grande de sección debería llevar `--bitter-chocolate` como color de fondo sólido. Se reserva para elementos pequeños con alta intención: un hook, una etiqueta, un subrayado, el estado activo de un CTA.
 
 ### 1.4 Escala de negro (para texto secundario)
 
@@ -72,7 +89,8 @@ Nunca para decoración de interfaz (botones, fondos, iconografía genérica).
 ### 1.6 Contraste y accesibilidad
 
 - `--carbon-black` sobre `--white`/`--white-2`/`--white-3`: contraste alto, apto para texto de cuerpo.
-- `--bitter-chocolate` (#783030) sobre blanco: contraste suficiente para texto de tamaño mediano/grande (hooks, etiquetas); para texto pequeño de cuerpo, preferir `--carbon-black` y usar el bordó solo como acento gráfico o en tamaños ≥16px con peso medio/alto.
+- `--bitter-chocolate` (#783131) sobre blanco: contraste suficiente para texto de tamaño mediano/grande (hooks, etiquetas); para texto pequeño de cuerpo, preferir `--carbon-black` y usar el bordó solo como acento gráfico o en tamaños ≥16px con peso medio/alto.
+- `--white` sobre `--bitter-chocolate`: combinación válida y ahora de uso frecuente (secciones de fondo bordó completo) — verificar siempre que el peso tipográfico sea ≥700 para mantener legibilidad sobre el fondo de color.
 - No usar `--bitter-chocolate` sobre `--carbon-black` ni viceversa como combinación texto/fondo — no está en el sistema y no se testeó.
 
 ---
@@ -335,14 +353,21 @@ Con `prefers-reduced-motion` activo, todo el contenido debe estar visible y util
 
 ## 6. Componentes por sección
 
-### 6.1 Hero
+### 6.1 Hero (actualizado)
 
 ```text
-Fondo:        --white
-Texto:        --carbon-black
-Acento:       --bitter-chocolate (en CTA o detalle puntual)
-Collage:      1–2 piezas de identidad
+Fondo:        --bitter-chocolate
+Texto:        --white
+Logo:         formato redondo, dentro del hero
+Título:       "Inconsciente en Pantuflas" — SIN el prefijo "IEP —"
+              (excepción puntual solo para este bloque; el resto del
+              sitio sigue usando "IEP — Inconsciente en Pantuflas" /
+              "IEP" según VOICE.md sección 4)
+Collage:      1–2 piezas de identidad — revisar contraste sobre bordó
 ```
+
+Requisito de responsive no negociable: en ningún dispositivo ni nivel de zoom el texto del Hero puede quedar tapado (por el logo, por una pieza de collage, o por sí mismo). Reducir tamaños de forma progresiva por breakpoint en vez de fijar un tamaño que dependa de que el viewport sea suficientemente grande.
+
 Debe establecer el lenguaje visual completo en el primer scroll: tipografía display, espacio negativo, al menos un recorte.
 
 ### 6.2 Próximo curso — pieza protagonista
@@ -354,27 +379,41 @@ Fondo:                --white
 Hook:                 --carbon-black, tipografía display, con detalle en --bitter-chocolate
 Información esencial: --carbon-black, --text-body
 Etiquetas (fecha/modalidad): --text-label sobre fondo --white-3 o subrayado --bitter-chocolate
-CTA:                  fondo --carbon-black o --bitter-chocolate, texto --white
-Collage:              1–2 piezas relacionadas al tema del curso
+CTA:                  fondo --carbon-black o --bitter-chocolate, texto --white, label "Quiero anotarme" (ver VOICE.md 3.3)
+Collage:              1–2 piezas relacionadas al tema del curso — YA NO incluye a Lacan, que se reubicó en "Quiénes somos" (ver 6.3)
 ```
 
-### 6.3 Quiénes somos
+### 6.3 Quiénes somos / Sobre nosotros
 
 ```text
-Fondo:    --white-2
+Fondo:    --white-2 (o el turno de bordó que le toque en la alternancia)
 Layout:   fotografía + pocas líneas de texto, mucho espacio negativo
 Acento:   --bitter-chocolate en una palabra o frase corta, no en bloques
+Figura:   Lacan (recorte, ver prompt de "figuras flotantes"), esquina
+          inferior izquierda — reubicado desde "Próximo curso"
 ```
 
-### 6.4 Archivo de cursos
+Contenido de esta pestaña de navegación (según la decisión más reciente): declaración de interés municipal, texto breve (2-3 párrafos) sobre por qué se armó la página, notas/menciones de prensa, y a futuro un placeholder de mercadería (ver `BACKLOG.md` punto 5).
+
+### 6.4 Nuestros cursos (rediseñado, ex "Archivo de cursos")
+
+Cambia de nombre y de comportamiento — ya no es un archivo/listado por año, es un grid de cards siempre completas:
 
 ```text
-Fondo:      --white
-Agrupación: por año, tipografía --text-h2 para el año, --text-body para cada curso
-Líneas:     separadores sutiles con --ink-15
-Densidad de collage: baja — prioridad total a la legibilidad y velocidad de escaneo
+Posición:    inmediatamente después de "Próximo curso" — incluye también
+             al curso actual como una card más, con tag "Próximo a dictar" + fecha
+Fondo:       según el turno que le toque en la alternancia bordó/blanco
+Card:        2 columnas — flyer del curso a la izquierda, título +
+             instructor + descripción breve a la derecha
+Tag por card: "Activo" / "Próximo - [fecha]" (o el estado que corresponda)
+CTA por card: "Quiero anotarme" → WhatsApp (ver VOICE.md 3.4)
+Visibilidad: TODAS las cards se muestran siempre completas — nada oculto
+             por defecto (a diferencia del patrón +/- general del sitio)
 ```
-Sin buscador/filtros hasta que el volumen de cursos lo justifique (brief sección 18).
+
+**Comportamiento del botón +/- de esta sección (distinto al resto del sitio):** no oculta ni muestra cards — alterna, para **todas las cards a la vez**, entre descripción breve (estado "–") y descripción completa (estado "+"). Es un toggle compartido, no un acordeón por card — no alcanza con `<details>`/`<summary>` individuales; requiere una clase o atributo a nivel de sección que las cards lean vía CSS (ver `BACKLOG.md` punto 6 para el patrón general de +/- del resto de las secciones, que sí es expandir/colapsar contenido).
+
+Sin buscador/filtros de cursos — eso ya no aplica a esta sección; el buscador es exclusivo de "¿Buscás un tema en específico?" (ver 6.6).
 
 ### 6.5 Pantu
 
@@ -385,7 +424,19 @@ Fondo:      --white-3 o --white-2 para diferenciarlo levemente del resto
 CTA final:  siempre deriva a WhatsApp
 ```
 
-### 6.6 CTA / WhatsApp
+### 6.6 ¿Buscás un tema en específico? (nueva)
+
+```text
+Fondo:      según el turno de la alternancia
+Estética:   caras de Iña y Manu como elemento visual, estilo similar al
+            canal de YouTube/Instagram — más cercano a Pantu que al
+            registro académico puro
+Resultado:  cada item con link directo al contenido (Instagram/YouTube
+            según tipo) + botón WhatsApp con mensaje precargado
+            (ver VOICE.md 3.5)
+```
+
+### 6.7 CTA / WhatsApp
 
 ```text
 Botón:      fondo --carbon-black o --bitter-chocolate, texto --white
@@ -436,7 +487,8 @@ Ajustes por breakpoint:
 
 Antes de dar por cerrada cualquier sección o componente, validar contra el brief:
 
-- [ ] ¿El bordó aparece como acento y no como relleno? (máx. ~5% de la superficie visual)
+- [ ] Dentro de una sección de fondo blanco, ¿el bordó aparece como acento y no como relleno? (máx. ~5% de esa sección — la regla de fondo-bordó-de-sección completa es válida solo en su propio turno de la alternancia, ver sección 1.3)
+- [ ] ¿El collage de retratos en blanco y negro se mantiene sin bordó incluso si le tocó un turno de sección bordó?
 - [ ] ¿Cada pieza de collage tiene una razón de estar ahí?
 - [ ] ¿La sección se entiende igual de bien con `prefers-reduced-motion` activo?
 - [ ] ¿El espacio negativo respira, o se sintió la tentación de "llenar"?
@@ -449,8 +501,8 @@ Antes de dar por cerrada cualquier sección o componente, validar contra el brie
 
 ## Estado
 
-**Paleta de color:** definida (tokens de marca)
-**Tipografía:** definida — Montserrat (identidad/institucional/citas) + Lato (hooks/body/UI), relevadas del feed real de Instagram
+**Paleta de color:** definida — hex de bordó actualizado a `#783131`; regla de proporción revisada (alternancia de secciones completas bordó/blanco, ver 1.3)
+**Tipografía:** implementada con Montserrat + Lato (relevadas del feed) — **riesgo abierto:** la "tipografía oficial de IEP" sigue pendiente de confirmación del cliente (`BACKLOG.md`); si difiere de lo relevado, hay que revisar tokens y font-loading
 **Espaciado/grilla:** definidos
 **Sistema de collage:** definido
 **Animación:** principios y tokens definidos

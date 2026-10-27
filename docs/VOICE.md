@@ -114,20 +114,26 @@ Reglas derivadas del guion real:
 
 - Directos, sin urgencia artificial. Nada de "¡Últimos cupos!" o "¡No te lo pierdas!".
 - Ejemplos de tono correcto:
-  - "Consultar por WhatsApp"
+  - "Quiero anotarme" (CTA principal de cada card de curso — ver corrección en sección 4)
   - "Ver curso"
-  - "Cursos anteriores"
+  - "Nuestros cursos"
 - Evitar signos de exclamación en botones y labels — se reservan para el registro cercano/Pantu.
 
 ### 3.4 Mensajes prearmados de WhatsApp
 
-Siguen el registro cercano (no el académico), en primera persona del usuario, simulando un mensaje real:
+Siguen el registro cercano (no el académico), en primera persona del usuario, simulando un mensaje real. Hay ahora tres mensajes distintos según el origen del botón:
 
+**Desde una card de curso ("Quiero anotarme"):**
 ```text
-Hola, quería consultar por el curso "{nombre del curso}".
+Hola! Quiero anotarme al curso de "{nombre del curso}".
 ```
 
-Sin emojis por defecto. Simple, funcional, sin relleno.
+**Desde un resultado de "¿Buscás un tema en específico?":**
+```text
+Pueden explicarme con más profundidad: {tema} - {autor}
+```
+
+Sin emojis por defecto en ninguno de los dos. Simples, funcionales, sin relleno — el bot de Pantu reconoce estos dos mensajes preseteados específicamente y notifica a Iñaki cuando llegan.
 
 ### 3.5 Copy de invitación / engagement (cierres, secciones "Pantu")
 
@@ -178,10 +184,21 @@ No hay todavía una guía de marca cerrada del cliente, pero el brief y el mater
 | Punto | Decisión de trabajo | Evidencia que la respalda |
 |---|---|---|
 | ¿Cómo se llama la actividad? | **"curso"** | El brief usa "curso" de forma sistemática y exclusiva (más de 30 menciones: "próximo curso", "archivo de cursos", "cursos anteriores"). No aparece "encuentro" ni "espacio" en ningún lugar del material. |
-| ¿Cómo se llama a la acción de participar? | **"consultar"**, no "inscribirse/anotarse" | La web no tiene inscripción online (brief secciones 2 y 22-23: sin carrito, sin checkout). El flujo documentado es *Web → Curso → Consultar → WhatsApp → Pantu/persona*. El mensaje prearmado de ejemplo del brief dice literalmente "Quería consultar por el curso...", no "quiero inscribirme". Usar un verbo de inscripción en el copy sugeriría un flujo que la web no tiene. |
+| ¿Cómo se llama a la acción de participar? | **"anotarse"** — CTA: "Quiero anotarme" | **Corrección de decisión anterior.** Se había concluido "consultar" porque la web no tiene inscripción online. Decisión posterior del equipo confirma el CTA como "Quiero anotarme al curso de '[Nombre del curso]'" — tiene sentido porque Pantu (el bot de WhatsApp) efectivamente procesa la inscripción real en la conversación (precio, datos, confirmación de pago). El verbo describe lo que el usuario está haciendo desde su perspectiva, aunque el trámite se cierre por WhatsApp y no en la web. |
 | ¿Cómo se refieren a la marca? | **"IEP — Inconsciente en Pantuflas"** en primeras menciones/institucional (Hero, footer, metadata); **"IEP"** a secas en el resto del copy corriente; **"iep" en minúscula** solo como wordmark del logo | Así aparece consistentemente en el brief y en `DESIGN.md` (el logo se documentó como "iep" en minúscula, Montserrat). |
 
-Con esto, el copy de placeholder y el CTA principal del sitio se escriben usando **"curso"** y **"consultar"** de forma consistente — no como término neutro provisorio, sino como vocabulario de marca de trabajo.
+Con esto, el copy de placeholder y el CTA principal del sitio se escriben usando **"curso"** y **"anotarse"** de forma consistente — no como término neutro provisorio, sino como vocabulario de marca de trabajo.
+
+### 4.1 Tags de estado por curso (nuevo)
+
+Vocabulario fijado para las etiquetas de las cards en "Nuestros cursos" (ver `DESIGN.md` 6.4):
+
+```text
+"Activo"           → el curso está en curso/dictándose
+"Próximo - [fecha]" → el curso actual/destacado, aún no arrancó
+```
+
+Se usa guion medio con espacios ("Próximo - 16 de septiembre"), no dos puntos ni paréntesis, para mantener el mismo patrón en todas las cards.
 
 ---
 
@@ -191,9 +208,10 @@ Con esto, el copy de placeholder y el CTA principal del sitio se escriben usando
 |---|---|---|
 | Hero | IEP | Institucional, breve, sin exclamaciones |
 | Próximo curso — hook | IEP | Académico-editorial, como el flyer relevado |
-| Próximo curso — CTA | IEP (transición) | Directo, sin urgencia de venta |
-| Quiénes somos | IEP | Institucional, cercano pero sin informalidad de Pantu |
-| Archivo de cursos | IEP | Neutro, funcional (fechas, títulos) |
+| Próximo curso — CTA | IEP (transición) | Directo, "Quiero anotarme", sin urgencia de venta |
+| Sobre nosotros | IEP | Institucional, cercano pero sin informalidad de Pantu |
+| Nuestros cursos | IEP | Neutro, funcional (fechas, tags de estado, instructor) |
+| ¿Buscás un tema en específico? | Entre IEP y Pantu | Más cercano, apoyado en las caras de Iña y Manu |
 | Aparición de Pantu | Pantu | La más cálida y cercana de las tres — orientadora, con pregunta de invitación |
 | Mensajes de WhatsApp | Cercano/usuario | Simple, funcional, primera persona del usuario |
 
@@ -215,5 +233,6 @@ Con esto, el copy de placeholder y el CTA principal del sitio se escriben usando
 
 **Voz de IEP (institucional/académica):** definida a partir de ejemplo real
 **Voz de cierre/engagement:** definida a partir de ejemplo real
-**Voz de Pantu:** resuelta — guion real de referencia (ver abajo). Es la voz más cálida de las tres, aunque en la práctica actual funciona como menú de opciones numeradas, no como conversación libre.
-**Vocabulario de marca:** confirmado — "curso", "IEP — Inconsciente en Pantuflas" / "IEP" / "iep" para el logo. Matiz agregado: "inscripción" sí es un término válido de marca (aparece en los flyers reales) para describir el *resultado* del proceso; "consultar" sigue siendo el verbo del CTA en la web, porque ahí no hay inscripción directa — se consulta y la inscripción se cierra por WhatsApp.
+**Voz de Pantu:** resuelta y en producción — el guion documentado acá (opciones 1-3) es una simplificación del bot real, que ya tiene lógica programada con opciones 0-5 (menú, info del curso actual, cursos viejos, hablar con una persona, valores/inscripción nacional e internacional). Repo separado `iep-whatsapp-bot`, stack Cloudflare Workers + KV vía YCloud. Bloqueado por un problema de verificación del número en YCloud — ver seguimiento en `BACKLOG.md`.
+**Vocabulario de marca:** confirmado — "curso", "IEP — Inconsciente en Pantuflas" / "IEP" / "iep" para el logo. **Corrección:** el verbo de CTA pasó de "consultar" a **"anotarse"** ("Quiero anotarme") — ver sección 4, el trámite de inscripción real ocurre en la conversación de WhatsApp con Pantu, así que el verbo sí describe la acción con precisión.
+**Números de WhatsApp confirmados:** IEP `5493417467464` (coincide con el que ya se había armado como `wa.me` link); Iñaki (notificaciones internas del bot) `5493413391154` — no se expone en la web, es interno del bot.

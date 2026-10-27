@@ -107,6 +107,8 @@ interface Course {
 }
 ```
 
+> Esta es la versión inicial del tipo. Ya está reemplazada en el repo por la versión extendida en `src/types/course.ts` (agrega `instructor`, `pricing`, `syllabus`, etc.) y por el tag de estado del punto 20.1 ("Activo" / "Próximo - [fecha]"), que reemplaza el enum `upcoming | past` a nivel de presentación.
+
 ---
 
 ## 5. Modelado del "próximo curso"
@@ -335,6 +337,66 @@ Astro soporta SSR con adapters (p. ej. Node), y Supabase tiene una guía oficial
 
 ---
 
+## 13.1 Navegación y arquitectura de información (actualizada)
+
+Reemplaza el modelo original de One Page pura por 3 pestañas de navegación (nav más grande, rectangular, fondo bordó):
+
+```text
+Cursos          → Hero + Próximo curso + Nuestros cursos
+Educación       → ¿Buscás un tema en específico?
+Sobre nosotros  → declaración de interés municipal + texto breve +
+                   notas/menciones + placeholder de mercadería (futuro)
+```
+
+Sigue siendo técnicamente una sola página (Astro estático, sin rutas nuevas por pestaña) — las "pestañas" son anclas de scroll dentro de `index.astro`, no páginas separadas. Si más adelante el contenido de alguna crece demasiado, se puede migrar esa pestaña a su propia ruta sin tocar las demás (mismo principio de "no romper lo que ya funciona" de la sección 16).
+
+## 13.2 Content collection: contenido educativo (nueva)
+
+```text
+src/content/education/
+    zimbardo-experimento-stanford.md
+    milgram-obediencia-autoridad.md
+    ...
+```
+
+Schema:
+
+```ts
+type EducationalContentType = "video" | "psicopildora" | "psicorelampago";
+
+interface EducationalContent {
+  id: string;
+  title: string;
+  type: EducationalContentType;
+  externalUrl: string; // YouTube o Instagram, según type
+  isFeatured?: boolean; // para destacar "los más vistos"
+}
+```
+
+**Contenido real ya relevado (11 items, todos actualmente con link de Instagram — pendiente confirmar si los de tipo video deben apuntar a YouTube en su lugar):**
+
+| Tipo | Tema | URL |
+|---|---|---|
+| Psicopíldora | Zimbardo y el experimento de Stanford | instagram.com/p/B_kold8JwFn |
+| Psicopíldora | Milgram y la obediencia a la autoridad | instagram.com/p/B_3SO8ppsdt |
+| Psicopíldora | Zimbardo y el experimento de Stanford (2) | instagram.com/p/CAIrrVpggj8 |
+| Psicopíldora | Asch y la conformidad con el grupo | instagram.com/p/CAvTkg7p1x8 |
+| Psicopíldora | Mayo y el efecto Hawthorne | instagram.com/p/CDSPoUNpoD4 |
+| Psicopíldora | Foucault y el panóptico de Bentham | instagram.com/p/CE9ZnDpgiks |
+| Psicopíldora | Marina Abramović y ser un objeto | instagram.com/p/CHxsINogxN- |
+| Psicorelámpago | Acting Out y Pasaje al Acto | instagram.com/p/CG-Mdk-AkGP |
+| Psicorelámpago | Fetichismo | instagram.com/p/CHiQs92gchC |
+| Psicorelámpago | Psicología de las masas y análisis del yo | instagram.com/p/CIVx59AAU6- |
+| Psicorelámpago | Categorías de la falta | instagram.com/p/CIiqxBBAa7A |
+
+Cada resultado, además del link directo, lleva un CTA a WhatsApp con el mensaje "Pueden explicarme con más profundidad: {tema} - {autor}" (`VOICE.md` sección 3.4) — el bot de Pantu reconoce este mensaje preseteado y avisa a Iñaki.
+
+## 13.3 Content collection: merch (futuro, placeholder)
+
+No se implementa todavía (`BACKLOG.md` punto 5, prioridad media) — se deja reservada la carpeta `src/content/merch/` con el tipo `MerchItem` ya definido en el backlog, para cuando haya productos y fotos reales.
+
+---
+
 ## 14. Estructura de repositorio propuesta
 
 ```text
@@ -375,6 +437,8 @@ iep-web/
 │   │
 │   ├── content/
 │   │   ├── courses/
+│   │   ├── education/
+│   │   ├── merch/          (reservada, sin contenido todavía)
 │   │   └── config.ts
 │   │
 │   ├── data/
@@ -705,6 +769,17 @@ No porque sean malas herramientas, sino porque no hay todavía un problema que n
 - Astro SSR
 - Astro Actions + Zod
 - `/admin`
+
+---
+
+## 28. Nota de límite de alcance: el bot de Pantu es otro repo
+
+El bot de WhatsApp de Pantu **no vive en este proyecto**. Es un repo aparte (`iep-whatsapp-bot`), con su propio stack (Cloudflare Workers + Cloudflare KV, conectado vía YCloud — mismo stack que usa Volk para otros clientes) y su propio ciclo de vida. Este documento (`iep-web`) solo necesita:
+
+- El número de WhatsApp de IEP (`5493417467464`) para armar los links `wa.me`.
+- Los dos textos de mensaje preseteado exactos (`VOICE.md` sección 3.4), porque el bot los reconoce por su contenido literal — si el copy de la web cambia, hay que avisar para actualizar el bot también.
+
+Todo lo demás (lógica del menú, notificaciones a Iñaki, pausas de conversación, cobro) es responsabilidad del otro repo y no bloquea el desarrollo de la web — salvo que, mientras el número no esté verificado en YCloud, los botones de WhatsApp van a abrir una conversación normal sin la automatización de Pantu detrás. La web funciona igual; simplemente no hay bot todavía del otro lado.
 
 ---
 
