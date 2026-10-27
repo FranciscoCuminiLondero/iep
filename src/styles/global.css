@@ -1,6 +1,20 @@
 @import "tailwindcss";
 @import "./tokens.css";
 
+/*
+  Decalotype Black — títulos (BACKLOG.md §19). FALTA EL ARCHIVO: descomentar
+  cuando esté public/fonts/decalotype-black.woff2 (y confirmada la licencia
+  web). Mientras tanto --font-title cae a Montserrat.
+
+@font-face {
+  font-family: "Decalotype";
+  src: url("/fonts/decalotype-black.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+*/
+
 :root {
   color-scheme: light;
 }
@@ -36,7 +50,7 @@ body {
 body {
   background-color: var(--white);
   color: var(--carbon-black);
-  font-family: var(--font-lato);
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
 }
 

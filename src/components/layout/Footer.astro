@@ -24,14 +24,14 @@ const navLinks = [
 	<nav aria-label="Secciones" class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
 		{
 			navLinks.map((link) => (
-				<a href={link.href} class="font-editorial text-sm text-white/70 transition-colors hover:text-white">
+				<a href={link.href} class="font-body text-sm text-white/70 transition-colors hover:text-white">
 					{link.label}
 				</a>
 			))
 		}
 	</nav>
 	<div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-		<a href={site.instagramUrl} target="_blank" rel="noopener" class="font-editorial text-sm text-white/70 transition-colors hover:text-white">
+		<a href={site.instagramUrl} target="_blank" rel="noopener" class="font-body text-sm text-white/70 transition-colors hover:text-white">
 			{site.instagramHandle}
 		</a>
 		{
@@ -40,7 +40,7 @@ const navLinks = [
 					href={`https://wa.me/${site.whatsappPhone}`}
 					target="_blank"
 					rel="noopener"
-					class="font-editorial text-sm text-white/70 transition-colors hover:text-white"
+					class="font-body text-sm text-white/70 transition-colors hover:text-white"
 				>
 					+{site.whatsappPhone}
 				</a>

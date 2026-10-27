@@ -1,7 +1,7 @@
 /*
   Tokens de marca — DESIGN.md §1-3, §5.2.
   Los tokens de color/tipografía se registran también en `@theme` para
-  generar utilities de Tailwind (bg-carbon-black, font-identity, etc.).
+  generar utilities de Tailwind (bg-carbon-black, font-title, etc.).
   El resto (ink scale, espaciado, movimiento) queda como variable CSS plana
   para usarse en CSS propio (collage, animaciones) sin pasar por Tailwind.
 */
@@ -11,7 +11,7 @@
   --white: #ffffff;
   --white-2: #fefcfd;
   --white-3: #fdfdfd;
-  --bitter-chocolate: #783030;
+  --bitter-chocolate: #783131;
   --carbon-black: #181818;
 
   /* Escala de negro por opacidad — DESIGN.md §1.4 */
@@ -21,6 +21,15 @@
   --ink-15: rgba(24, 24, 24, 0.15);
 
   /* Tipografía — DESIGN.md §2.3 */
+  /* Decalotype todavía no está en public/fonts: mientras falte, cae a
+     Montserrat (ver @font-face comentado en global.css). */
+  --font-decalotype: "Decalotype", "Montserrat", sans-serif;
+  /* Helvetica no se carga como fuente web: usa la del dispositivo
+     (Helvetica en Apple, Arial en Windows/Android). */
+  --font-helvetica: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-source-serif: "Source Serif 4", serif;
+
+  /* Respaldo — tipografía anterior, se deja cargada hasta tener Decalotype */
   --font-montserrat: "Montserrat", sans-serif;
   --font-lato: "Lato", sans-serif;
 
@@ -58,6 +67,7 @@
   --color-carbon-black: var(--carbon-black);
 
   /* Roles tipográficos, no nombres de fuente (DESIGN.md §2.3) */
-  --font-identity: var(--font-montserrat);
-  --font-editorial: var(--font-lato);
+  --font-title: var(--font-decalotype); /* títulos — Decalotype Black */
+  --font-body: var(--font-helvetica); /* texto tipo publicaciones — Helvetica Bold */
+  --font-small: var(--font-source-serif); /* texto chico */
 }

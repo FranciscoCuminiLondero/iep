@@ -79,77 +79,104 @@ Nunca para decoración de interfaz (botones, fondos, iconografía genérica).
 
 ## 2. Tipografía
 
-El brief (sección 6) pide que la elección final surja de comparar el lenguaje visual del feed de Instagram con las posibilidades de interfaz. Ese relevamiento ya se hizo sobre el feed real de IEP y arrojó dos familias en uso, cada una con un rol claramente diferenciado — se adoptan ambas como sistema tipográfico oficial de la web.
+> **Actualización (BACKLOG.md §19–23):** la tipografía oficial de IEP reemplaza a Montserrat + Lato, que se habían relevado del feed. Montserrat y Lato quedan instaladas solo como fuente de respaldo mientras falten los archivos de Decalotype y la decisión sobre Helvetica.
 
-### 2.1 Familias identificadas en el feed
+### 2.1 Familias oficiales
 
-| Elemento en Instagram | Tipografía | Detalle observado |
+| Rol | Tipografía | Respaldo actual |
 |---|---|---|
-| Logo "iep" | **Montserrat** Bold/Black | Trazo geométrico y homogéneo; la "e" tiene terminal horizontal recto |
-| Títulos tipo "Los esquemas..." | **Montserrat** ExtraBold/Black | Mayúsculas, mucho peso visual, formas redondeadas en curvas (p. ej. la "S") |
-| Cuerpo tipo flyer, "Introducción a la..." | **Lato** Bold/Black | Aspecto humanista y redondeado, sin remates (sans serif) |
-
-Esto confirma y cierra el principio del brief de máximo dos familias: **Montserrat** para todo lo identitario/institucional/académico, **Lato** para todo lo editorial de tipo flyer/anuncio de curso.
+| Títulos | **Decalotype Black** | Montserrat (todavía no están los archivos de Decalotype) |
+| Texto tipo publicaciones informativas ("sexología") | **Helvetica Bold** | La del dispositivo: Helvetica en Apple, Arial en Windows/Android |
+| Texto chico (casi no se usa) | **Source Serif Pro** (en Google Fonts: "Source Serif 4") | — |
 
 ### 2.2 Rol de cada familia
 
-**Montserrat** — geométrica, institucional, "académica"
-- Logo y wordmark de IEP.
-- Títulos de sección (Hero, "Quiénes somos", encabezados del Archivo).
-- Citas de autores / pensadores dentro del collage — refuerza el costado cultural e intelectual.
-- Pesos: Bold (700) para títulos de sección, ExtraBold/Black (800/900) para el logo y titulares de máximo peso.
+**Decalotype Black** — títulos
+- Logo/wordmark y títulos de sección (Hero, "Sobre nosotros", "Nuestros cursos").
+- Citas de autores dentro del collage.
 
-**Lato** — humanista, redondeada, tipo flyer
-- Hook y datos del próximo curso (fecha, modalidad, nombre) — es la voz "editorial de anuncio" que ya usa IEP en sus posts de cursos.
+**Helvetica Bold** — texto tipo publicaciones
+- Hooks y datos del curso (fecha, modalidad, nombre).
 - Cuerpo de texto general (descripciones, bajadas).
 - Elementos de UI: botones, etiquetas, metadata.
-- Pesos: Bold/Black para hooks y títulos de curso, Regular/Bold para cuerpo y UI.
 
-> Regla de coherencia con el feed: si un texto en Instagram se vería como "post de curso/flyer" → Lato. Si se vería como "logo, titular institucional o cita de autor" → Montserrat.
+**Source Serif 4** — texto chico
+- Uso puntual: notas, aclaraciones, letra chica. Casi no aparece.
+
+> Regla de coherencia: si es un título o algo identitario → `--font-title`. Si es texto que se lee (cuerpo, hooks, UI) → `--font-body`. Solo letra chica → `--font-small`.
 
 ### 2.3 Tokens de familia
 
 ```css
---font-montserrat: "Montserrat", sans-serif;
---font-lato: "Lato", sans-serif;
+/* :root — stacks con respaldo */
+--font-decalotype: "Decalotype", "Montserrat", sans-serif;
+--font-helvetica: "Helvetica Neue", Helvetica, Arial, sans-serif;
+--font-source-serif: "Source Serif 4", serif;
 
---font-identity: var(--font-montserrat);  /* logo, headings, citas */
---font-editorial: var(--font-lato);       /* hooks de curso, body, UI */
+/* @theme — roles (generan las utilities font-title, font-body, font-small) */
+--font-title: var(--font-decalotype);
+--font-body: var(--font-helvetica);
+--font-small: var(--font-source-serif);
 ```
+
+Reemplazan a `--font-identity` y `--font-editorial`. `--font-montserrat` y `--font-lato` siguen definidas como respaldo, pero no se usan directamente en componentes.
 
 ### 2.4 Roles tipográficos y escala (mobile-first)
 
-| Rol | Familia | Peso | Tamaño | Uso |
+| Rol | Token | Peso | Tamaño | Uso |
 |---|---|---|---|---|
-| **Logo** | Montserrat | Black (900) / Bold (700) | fijo según lockup | Wordmark "iep" |
-| **Heading / Título de sección** | Montserrat | ExtraBold/Black (800–900) | `clamp(1.5rem, 4.5vw, 2.5rem)` | "Próximo curso", "Archivo", "Quiénes somos" |
-| **Heading secundario** | Montserrat | Bold (700) | `clamp(1.25rem, 3.5vw, 1.75rem)` | Subtítulos, año en el Archivo |
-| **Hook de curso** | Lato | Black (900) | `clamp(1.75rem, 6vw, 3.25rem)` / line-height 1.05 | Hook del próximo curso, titulares tipo flyer |
-| **Cita de autor** | Montserrat | Medium/Bold, itálica opcional | `1.125rem`–`1.25rem` | Frases de pensadores en el collage |
-| **Body** | Lato | Regular (400) | `1rem` / line-height 1.6 | Descripciones, bajadas |
-| **Body destacado** | Lato | Bold (700) | `1.125rem` / line-height 1.6 | Información esencial del curso (fecha, modalidad) |
-| **UI / Label** | Lato | Bold (700) | `0.8125rem` / letter-spacing +0.02em | Botones, etiquetas, metadata |
+| **Logo** | `--font-title` | Black (900) | fijo según lockup | Wordmark "iep" |
+| **Heading / Título de sección** | `--font-title` | Black (900) | `clamp(1.5rem, 4.5vw, 2.5rem)` | "Próximo curso", "Nuestros cursos", "Sobre nosotros" |
+| **Heading secundario** | `--font-title` | Black (900) | `clamp(1.25rem, 3.5vw, 1.75rem)` | Subtítulos |
+| **Hook de curso** | `--font-body` | Bold (700) | `clamp(1.75rem, 6vw, 3.25rem)` / line-height 1.05 | Hook del próximo curso, titulares tipo flyer |
+| **Cita de autor** | `--font-title` | Black (900) | `1.125rem`–`1.25rem` | Frases de pensadores en el collage |
+| **Body** | `--font-body` | Bold (700) | `1rem` / line-height 1.6 | Descripciones, bajadas |
+| **Body destacado** | `--font-body` | Bold (700) | `1.125rem` / line-height 1.6 | Información esencial del curso (fecha, modalidad) |
+| **UI / Label** | `--font-body` | Bold (700) | `0.8125rem` / letter-spacing +0.02em | Botones, etiquetas, metadata |
+| **Texto chico** | `--font-small` | Regular (400) | `0.75rem`–`0.875rem` | Notas, letra chica |
+
+> A confirmar (BACKLOG.md D): Helvetica Bold para párrafos largos puede ser muy pesada; si se permite Helvetica normal (400) para el cuerpo, se suma a los pesos límite de 2.7. Hasta que se decida, el código conserva los pesos que ya tenía cada texto.
 
 ### 2.5 Reglas de aplicación
 
-- El **hook** del próximo curso siempre en Lato Black, color `--carbon-black`, con un detalle en `--bitter-chocolate` (subrayado, palabra clave, etiqueta) — nunca el bloque completo en bordó.
-- Las **citas de autores/pensadores** del collage van siempre en Montserrat, nunca en Lato — es lo que las distingue visualmente del contenido "flyer" y refuerza el tono académico.
-- El **logo** se reserva exclusivamente a Montserrat Bold/Black — no se sustituye ni se aproxima con Lato en ningún contexto.
-- No mezclar Montserrat y Lato dentro de una misma línea de texto o bloque continuo; el cambio de familia ocurre entre bloques (p. ej. heading en Montserrat, párrafo debajo en Lato), nunca a media frase.
-- Máximo 2 pesos por familia visibles simultáneamente en una misma sección.
-- Ancho de línea de párrafo (Lato body): 45–70 caracteres (`max-width` en `ch`).
-- Interlineado generoso en cuerpo de texto (≥1.5) para mantener la sensación editorial y de aire.
+- El **hook** del próximo curso va en `--font-body`, color `--carbon-black`, con un detalle en `--bitter-chocolate` (subrayado, palabra clave, etiqueta) — nunca el bloque completo en bordó.
+- Las **citas de autores** del collage van en `--font-title`, nunca en `--font-body`.
+- El **logo** se reserva a Decalotype Black — no se sustituye con Helvetica en ningún contexto.
+- No mezclar familias dentro de una misma línea o bloque continuo; el cambio ocurre entre bloques (título en Decalotype, párrafo debajo en Helvetica), nunca a media frase.
+- Ancho de línea de párrafo: 45–70 caracteres (`max-width` en `ch`).
+- Interlineado generoso en cuerpo de texto (≥1.5).
 
 ### 2.6 Carga de fuentes
 
-Ambas son Google Fonts — se autohospedan (self-host) para performance y para no depender de Google Fonts en runtime, cargando solo los pesos realmente usados:
-
 ```text
-Montserrat: 700 (Bold), 800 (ExtraBold), 900 (Black)
-Lato:       400 (Regular), 700 (Bold), 900 (Black)
+Decalotype:      900 (Black) — @font-face preparado en global.css, comentado
+                 hasta tener public/fonts/decalotype-black.woff2 (y licencia web)
+Helvetica:       no se carga como fuente web — es paga; se usa la del dispositivo
+                 hasta decidir si se compra la licencia (BACKLOG.md C)
+Source Serif 4:  400 (Regular) — autohospedada con @fontsource/source-serif-4
+Montserrat/Lato: siguen cargadas (700/800/900 y 400/700/900) como respaldo;
+                 se quitan cuando Decalotype esté en producción
 ```
 
-Evitar cargar el rango completo de pesos de cada familia — impacta performance sin beneficio visual, ya que el sistema usa un set acotado de pesos por rol.
+No se baja una fuente "parecida" de otro lado para reemplazar a Decalotype o Helvetica.
+
+### 2.7 Pesos límite (hard limit)
+
+Estos son los **únicos pesos permitidos** en el sistema oficial:
+
+```text
+Decalotype      900  Black    → único peso — títulos
+Helvetica       700  Bold     → único peso — texto tipo publicaciones, UI
+Source Serif 4  400  Regular  → único peso — texto chico
+```
+
+**Reglas duras:**
+
+- **Un solo peso por familia.** No se cargan ni se usan variantes intermedias ni más livianas.
+- Mientras se usen los respaldos, Montserrat y Lato conservan sus pesos cargados (700–900 y 400–900); no se agregan pesos nuevos a ninguna de las dos.
+- **No usar pesos "false bold/italic"** generados por el navegador cuando el peso o el corte no están cargados.
+- Cualquier necesidad de jerarquía extra se resuelve con tamaño, tracking o color — no sumando un peso.
+
 
 ---
 

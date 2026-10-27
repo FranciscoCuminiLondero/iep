@@ -101,19 +101,19 @@ const press = [
 	/>
 
 	<div class="flex max-w-md flex-col items-center gap-4 md:items-start">
-		<h2 class="font-identity text-[clamp(1.5rem,4.5vw,2.5rem)] font-extrabold text-carbon-black uppercase">
+		<h2 class="font-title text-[clamp(1.5rem,4.5vw,2.5rem)] font-extrabold text-carbon-black uppercase">
 			Espacio de interés en Cultura, Salud y Educación
 		</h2>
-		<p class="font-editorial text-base text-carbon-black/70">
+		<p class="font-body text-base text-carbon-black/70">
 			Esa distinción ({site.decree}) es la declaración de interés municipal del Concejo de
 			Rosario a la cuenta de Instagram y la producción audiovisual de IEP, "por su gran
 			aporte al ámbito educativo y formativo para el desarrollo de los futuros
 			profesionales de la salud mental de la ciudad y la región".
 		</p>
-		<p class="font-editorial text-sm font-bold text-carbon-black/70">{site.founders}</p>
+		<p class="font-body text-sm font-bold text-carbon-black/70">{site.founders}</p>
 
 		<div class="mt-2 flex flex-col items-center gap-3 md:items-start">
-			<p class="font-editorial text-xs font-bold tracking-[0.1em] text-carbon-black/45 uppercase">En los medios</p>
+			<p class="font-body text-xs font-bold tracking-[0.1em] text-carbon-black/45 uppercase">En los medios</p>
 			<a href={press[0].href} target="_blank" rel="noopener" class="flex w-full flex-col items-center gap-2 md:items-start">
 				<CollagePiece
 					src="/images/declaracion-interes.png"
@@ -121,11 +121,11 @@ const press = [
 					rotation={-1}
 					class="aspect-[759/225] w-full"
 				/>
-				<span class="font-editorial text-sm font-bold text-bitter-chocolate underline underline-offset-2">{press[0].label}</span>
+				<span class="font-body text-sm font-bold text-bitter-chocolate underline underline-offset-2">{press[0].label}</span>
 			</a>
 			{
 				press.slice(1).map((item) => (
-					<a href={item.href} target="_blank" rel="noopener" class="font-editorial text-sm font-bold text-bitter-chocolate underline underline-offset-2">
+					<a href={item.href} target="_blank" rel="noopener" class="font-body text-sm font-bold text-bitter-chocolate underline underline-offset-2">
 						{item.label}
 					</a>
 				))

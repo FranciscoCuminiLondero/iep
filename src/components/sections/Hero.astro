@@ -8,7 +8,7 @@ import NextSectionLink from "../ui/NextSectionLink.astro";
 <!-- hero.png pegada al borde inferior real de la sección (bottom-0, no
      bottom-6), centrada, al doble de ancho que el título — max-w-[40ch]
      solo da el resultado esperado si comparte fuente Y tamaño con el h1,
-     porque "ch" se calcula a partir de ambos; por eso repite font-identity
+     porque "ch" se calcula a partir de ambos; por eso repite font-title
      y el mismo clamp() de font-size (sin efecto visual en un <img>, solo
      para que el cálculo dé igual). Va ANTES que NextSectionLink en el
      markup para que la flecha (sin z-index propio, pinta después) quede
@@ -39,14 +39,14 @@ import NextSectionLink from "../ui/NextSectionLink.astro";
 	<FigureCutout
 		src="/images/hero.png"
 		alt="Collage de escritores y pensadores en blanco y negro"
-		class="font-identity absolute bottom-0 left-1/2 w-full max-w-[40ch] -translate-x-1/2 text-[clamp(1.5rem,4.5vw,2.5rem)]"
+		class="font-title absolute bottom-0 left-1/2 w-full max-w-[40ch] -translate-x-1/2 text-[clamp(1.5rem,4.5vw,2.5rem)]"
 	/>
 	<img src="/images/logo-iep.jpg" alt={site.name} class="h-28 w-28 rounded-sm sm:h-32 sm:w-32 md:h-40 md:w-40" />
-	<h1 class="font-identity max-w-[20ch] text-[clamp(1.5rem,4.5vw,2.5rem)] font-black text-carbon-black uppercase">
+	<h1 class="font-title max-w-[20ch] text-[clamp(1.5rem,4.5vw,2.5rem)] font-black text-carbon-black uppercase">
 		{site.name}
 	</h1>
-	<p class="font-editorial text-sm font-bold text-carbon-black/70">{site.founders}</p>
-	<p class="font-editorial max-w-[45ch] text-base text-carbon-black/70">{site.tagline}</p>
-	<p class="font-editorial text-xs text-carbon-black/45">{site.decree}</p>
+	<p class="font-body text-sm font-bold text-carbon-black/70">{site.founders}</p>
+	<p class="font-body max-w-[45ch] text-base text-carbon-black/70">{site.tagline}</p>
+	<p class="font-body text-xs text-carbon-black/45">{site.decree}</p>
 	<NextSectionLink target="proximo-curso" label="Ir al próximo curso" />
 </section>

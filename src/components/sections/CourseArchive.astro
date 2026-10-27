@@ -92,10 +92,10 @@ const restCourses = pastCourses.slice(VISIBLE_COUNT);
 		alt="Retrato de Zygmunt Bauman"
 		class="absolute -top-8 -left-20 -z-10 h-48 sm:-left-14 sm:h-16 md:-top-16 md:-left-28 md:h-[56vh]"
 	/>
-	<h2 class="font-identity text-[clamp(1.5rem,4.5vw,2.5rem)] font-extrabold text-carbon-black uppercase">
+	<h2 class="font-title text-[clamp(1.5rem,4.5vw,2.5rem)] font-extrabold text-carbon-black uppercase">
 		Archivo de cursos
 	</h2>
-	<p class="font-editorial -mt-6 max-w-[50ch] text-sm text-carbon-black/60">
+	<p class="font-body -mt-6 max-w-[50ch] text-sm text-carbon-black/60">
 		Todos estos cursos siguen disponibles — podés solicitarlos para hacerlos cuando quieras.
 	</p>
 	<ul class="flex w-full max-w-2xl flex-col">
@@ -112,8 +112,8 @@ const restCourses = pastCourses.slice(VISIBLE_COUNT);
 						<summary class="order-2 mt-4 flex cursor-pointer list-none items-center justify-center gap-2 text-center">
 							{/* Dos textos, uno tapa al otro según el estado — sin JS,
 							    con group-open (el group es el propio <details>). */}
-							<span class="font-editorial text-sm font-bold text-bitter-chocolate group-open:hidden">Ver {restCourses.length} cursos más</span>
-							<span class="font-editorial hidden text-sm font-bold text-bitter-chocolate group-open:inline">Ocultar {restCourses.length} cursos</span>
+							<span class="font-body text-sm font-bold text-bitter-chocolate group-open:hidden">Ver {restCourses.length} cursos más</span>
+							<span class="font-body hidden text-sm font-bold text-bitter-chocolate group-open:inline">Ocultar {restCourses.length} cursos</span>
 							<ChevronDown class="h-4 w-4 text-bitter-chocolate transition-transform group-open:rotate-180" aria-hidden="true" />
 						</summary>
 						<ul class="order-1 flex flex-col">
@@ -151,14 +151,14 @@ const restCourses = pastCourses.slice(VISIBLE_COUNT);
 	   disertante) — set:html no pasa por el scoping de Astro, por eso va
 	   con is:global apuntando a la clase del wrapper. */
 	.course-details {
-		font-family: var(--font-lato);
+		font-family: var(--font-body);
 		color: var(--ink-70);
 		font-size: 1rem;
 		line-height: 1.6;
 	}
 
 	.course-details h3 {
-		font-family: var(--font-montserrat);
+		font-family: var(--font-title);
 		font-weight: 700;
 		color: var(--carbon-black);
 		margin-top: 1rem;
