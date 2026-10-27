@@ -1,7 +1,11 @@
 // Datos globales del sitio — evita hardcodear strings de marca en cada
 // componente (ARCHITECTURE.md §14). Ver docs/VOICE.md §4 para el vocabulario.
+const longName = "Inconsciente en Pantuflas";
+
 export const site = {
-  name: "IEP — Inconsciente en Pantuflas",
+  name: `IEP — ${longName}`,
+  /** Nombre sin el prefijo "IEP —", para el título del Hero (BACKLOG.md §6). */
+  longName,
   shortName: "IEP",
   /** Wordmark del logo, siempre en minúscula (VOICE.md §4). */
   wordmark: "iep",

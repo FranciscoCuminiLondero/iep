@@ -1,0 +1,18 @@
+---
+import type { SectionProps } from "../../lib/sections";
+import Section from "../layout/Section.astro";
+import NextSectionLink from "../ui/NextSectionLink.astro";
+
+type Props = SectionProps;
+
+const { id, variant, nav, next } = Astro.props;
+---
+
+<!-- TODO: contenido de "Educación" — buscador "¿Buscás un tema en
+     específico?" con psicopíldoras y psicorelámpagos (BACKLOG.md §15-16).
+     Por ahora solo el esqueleto, para que la pestaña del índice no quede
+     con un link roto. -->
+<Section id={id} variant={variant} nav={nav} class="flex min-h-screen flex-col items-center justify-center gap-6 px-6 py-20 text-center">
+	<h2 class="font-title text-[clamp(1.5rem,4.5vw,2.5rem)] font-black text-fg uppercase">Educación</h2>
+	{next && <NextSectionLink target={next.id} label={next.label} />}
+</Section>

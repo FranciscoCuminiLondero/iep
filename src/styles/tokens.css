@@ -14,6 +14,20 @@
   --bitter-chocolate: #783131;
   --carbon-black: #181818;
 
+  /*
+    Superficie de sección — valores por defecto (variante "white"). Section.astro
+    los redefine en las secciones "burgundy" (BACKLOG.md §1): el texto de una
+    sección usa siempre text-fg / text-accent, nunca un color fijo, así una
+    sección se acomoda sola si cambia de lugar en la alternancia.
+  */
+  --section-bg: var(--white);
+  --section-fg: var(--carbon-black);
+  --section-accent: var(--bitter-chocolate);
+
+  /* Navegación — barra fija arriba (<768px) e índice lateral (≥768px) */
+  --nav-bar-h: 3rem;
+  --nav-rail-w: 12rem;
+
   /* Escala de negro por opacidad — DESIGN.md §1.4 */
   --ink-100: var(--carbon-black);
   --ink-70: rgba(24, 24, 24, 0.7);
@@ -70,4 +84,15 @@
   --font-title: var(--font-decalotype); /* títulos — Decalotype Black */
   --font-body: var(--font-helvetica); /* texto tipo publicaciones — Helvetica Bold */
   --font-small: var(--font-source-serif); /* texto chico */
+}
+
+/*
+  `inline` a propósito: sin él, Tailwind resuelve var(--section-fg) una sola
+  vez en :root y las secciones bordó heredarían el valor ya resuelto (negro),
+  sin poder redefinirlo. Con inline, text-fg usa var(--section-fg) directo
+  y toma el valor de la sección donde está el elemento.
+*/
+@theme inline {
+  --color-fg: var(--section-fg);
+  --color-accent: var(--section-accent);
 }

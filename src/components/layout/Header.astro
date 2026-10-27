@@ -28,12 +28,16 @@ import { site } from "../../data/site";
      tiene su propio logo, y como los dos usan el mismo bordó de fondo, el
      logo flotante quedaba ahí como un parche de color sin sentido — nada
      roto en la imagen, solo un elemento redundante mostrándose donde no
-     hace falta. -->
+     hace falta.
+
+     Solo desde md: en mobile el tope de la pantalla lo ocupa la barra de
+     navegación fija (SectionIndex.astro). Desde md arranca después de la
+     columna del índice, para quedar centrado sobre el contenido. -->
 
 <header
 	id="site-header"
 	data-visible="false"
-	class="pointer-events-none fixed inset-x-0 top-0 z-20 flex items-center justify-center py-4 opacity-0 transition-opacity duration-300 data-[visible=true]:pointer-events-auto data-[visible=true]:opacity-100"
+	class="pointer-events-none fixed inset-x-0 top-0 z-20 flex max-md:hidden md:left-(--nav-rail-w) items-center justify-center py-4 opacity-0 transition-opacity duration-300 data-[visible=true]:pointer-events-auto data-[visible=true]:opacity-100"
 >
 	<a href="#hero" aria-label={`Volver arriba — ${site.name}`}>
 		<img src="/images/logo-iep.jpg" alt={site.name} class="h-10 w-10 rounded-sm" />
@@ -53,9 +57,13 @@ import { site } from "../../data/site";
 			header.dataset.visible = heroVisible || footerVisible ? "false" : "true";
 		};
 
+		// Oculto mientras el sentinel no cruzó la mitad de la pantalla hacia
+		// arriba — también cuando todavía está DEBAJO del viewport (Hero más
+		// alto que la pantalla), donde isIntersecting da false igual que
+		// cuando ya pasó.
 		const heroObserver = new IntersectionObserver(
 			([entry]) => {
-				heroVisible = entry.isIntersecting;
+				heroVisible = entry.boundingClientRect.top >= (entry.rootBounds?.top ?? window.innerHeight / 2);
 				updateVisibility();
 			},
 			{ threshold: 0, rootMargin: "-50% 0px 0px 0px" },

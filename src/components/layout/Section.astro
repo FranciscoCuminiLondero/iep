@@ -1,0 +1,96 @@
+---
+// Contenedor de toda sección de la página. Define el fondo y los colores de
+// texto según la variante (BACKLOG.md §1) — las secciones no fijan colores
+// propios: usan text-fg / text-accent (tokens.css), que acá toman el valor
+// de la variante.
+//
+// sticky (default): md:sticky md:top-0, el efecto "cards" entre secciones
+// (ver comentario en index.astro). Solo desde md — en mobile las secciones
+// apilan su contenido y superan el alto de pantalla, y con sticky parte del
+// contenido quedaría inalcanzable. sticky="lg" para secciones cuyo layout
+// en fila recién entra desde lg (con la columna del índice ocupando ancho).
+// Si la sección es más alta que la pantalla (contenido largo, zoom), el
+// script de abajo le da un top negativo: se pega recién cuando su borde
+// inferior llega al de la pantalla, así todo su contenido se alcanza antes
+// de que la tape la siguiente. Con top:0 fijo, lo que pasaba del alto de
+// pantalla quedaba inalcanzable.
+//
+// scroll-mt: en mobile la barra de navegación fija (SectionIndex.astro) tapa
+// el tope de la sección al llegar por ancla; ScrollNav.astro lee este valor.
+// tabindex=-1: ScrollNav mueve el foco a la sección al navegar, para que el
+// teclado siga desde ahí.
+import type { NavTabId } from "../../data/navigation";
+import type { SectionVariant } from "../../lib/sections";
+
+interface Props {
+	id: string;
+	variant: SectionVariant;
+	nav?: NavTabId;
+	sticky?: boolean | "lg";
+	class?: string;
+}
+
+const { id, variant, nav, sticky = true, class: className } = Astro.props;
+---
+
+<section
+	id={id}
+	tabindex="-1"
+	data-section
+	data-nav={nav}
+	data-sticky={sticky ? "" : undefined}
+	class:list={[
+		"section",
+		`section--${variant}`,
+		"relative scroll-mt-(--nav-bar-h) outline-none md:scroll-mt-0",
+		sticky === true && "md:sticky md:top-(--sticky-top,0px)",
+		sticky === "lg" && "lg:sticky lg:top-(--sticky-top,0px)",
+		className,
+	]}
+>
+	<slot />
+</section>
+
+<script>
+	// Ver comentario de arriba. Se recalcula cuando cambia el alto de una
+	// sección (fuentes, imágenes, <details> abiertos) o el de la pantalla.
+	const stickySections = document.querySelectorAll<HTMLElement>("[data-sticky]");
+
+	const updateStickyTop = () => {
+		const viewportHeight = document.documentElement.clientHeight;
+		for (const section of stickySections) {
+			section.style.setProperty("--sticky-top", `${Math.min(0, viewportHeight - section.offsetHeight)}px`);
+		}
+	};
+
+	if (stickySections.length > 0) {
+		const observer = new ResizeObserver(updateStickyTop);
+		stickySections.forEach((section) => observer.observe(section));
+		window.addEventListener("resize", updateStickyTop);
+	}
+</script>
+
+<style is:global>
+	/* @layer base: cualquier utility de Tailwind (que vive en
+	   @layer utilities) puede pisar esto si una sección lo necesita. */
+	@layer base {
+		.section {
+			background-color: var(--section-bg);
+			color: var(--section-fg);
+		}
+
+		/* Sobre bordó, todo el texto en blanco — incluido el acento, que en
+		   blanco sería bordó sobre bordó. */
+		.section--burgundy {
+			--section-bg: var(--bitter-chocolate);
+			--section-fg: var(--white);
+			--section-accent: var(--white);
+		}
+
+		.section--white {
+			--section-bg: var(--white);
+			--section-fg: var(--carbon-black);
+			--section-accent: var(--bitter-chocolate);
+		}
+	}
+</style>

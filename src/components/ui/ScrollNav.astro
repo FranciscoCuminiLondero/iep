@@ -1,61 +1,45 @@
 ---
 // Sin markup propio — solo el script de abajo. Centraliza la navegación por
-// hash a las 5 secciones (#hero, #proximo-curso, #quienes-somos, #archivo,
-// #pantu) para TODOS los links que apuntan a ellas en el sitio (SectionIndex,
-// MobileMenu, el logo de Header/Footer, NextSectionLink) sin tener que tocar
-// cada componente: delega el click a nivel de document.
+// hash a las secciones de la página para TODOS los links que apuntan a ellas
+// (SectionIndex, el logo de Header/Footer, NextSectionLink, el Footer) sin
+// tener que tocar cada componente: delega el click a nivel de document. Se
+// aplica a cualquier elemento con data-section (Section.astro), así que las
+// secciones nuevas quedan cubiertas sin registrarlas acá.
 //
 // Por qué hace falta (no alcanza con dejarlo en manos del navegador):
-// Hero, Próximo curso, Quiénes somos y Archivo son md:sticky (efecto
-// "cards", ver Hero.astro) — una vez que una de esas secciones ya quedó
-// pegada en top:0, su propio getBoundingClientRect().top da 0 aunque una
-// sección posterior la tape visualmente en pantalla. Un <a href="#id"> plano
-// hace que el navegador la vea "ya visible" en ese caso y no mueva el scroll
-// nada: funciona al bajar a una sección todavía no alcanzada, pero falla en
-// silencio al volver a una ya pasada — el bug intermitente reportado en
-// desktop (el único breakpoint con sticky; en mobile/tablet ninguna sección
-// es sticky, por eso ahí siempre funcionó). Los sentinels en index.astro
-// (#hero-end, #proximo-curso-end, #quienes-somos-end) NO son sticky, así que
-// siempre reflejan la posición real en el documento sin importar qué esté
-// pegado encima — se usan como destino real en lugar de la sección sticky.
+// desde md las secciones son sticky (efecto "cards", ver index.astro) — una
+// vez que una ya quedó pegada en top:0, su propio getBoundingClientRect().top
+// da 0 aunque una sección posterior la tape en pantalla. Un <a href="#id">
+// plano hace que el navegador la vea "ya visible" y no mueva el scroll: falla
+// en silencio al volver a una sección ya pasada. El destino real es el
+// sentinel que está justo antes de cada sección (index.astro): no es sticky,
+// así que siempre refleja la posición real en el documento.
 //
-// De paso, esto reemplaza el scroll-behavior:smooth nativo (duración/curva
-// fija del navegador) por una animación propia con la curva y duración de
-// marca (--ease-editorial, --duration-slow en tokens.css) — de acá el
-// pedido de transiciones "más suaves" entre secciones.
-const targets: Record<string, string | null> = {
-	hero: null, // null = tope real de la página (siempre scrollY 0, Hero es el primer elemento)
-	"proximo-curso": "hero-end",
-	"quienes-somos": "proximo-curso-end",
-	archivo: "quienes-somos-end",
-	pantu: "pantu", // Pantu no es sticky: su propia posición ya es siempre confiable
-};
+// También descuenta el scroll-margin-top de la sección (en mobile, el alto de
+// la barra de navegación fija — Section.astro), y reemplaza el
+// scroll-behavior:smooth nativo por una animación con la curva y duración de
+// marca (--ease-editorial, --duration-slow en tokens.css). Sin animación si
+// el usuario tiene prefers-reduced-motion.
 ---
 
-<script define:vars={{ targets }} is:inline>
-	const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+<script>
+	const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-	// cubic-bezier(0.22, 1, 0.36, 1) de tokens.css (--ease-editorial), la
-	// misma curva que el resto de las transiciones del sitio — aproximada acá
-	// a mano porque rAF no puede evaluar cubic-bezier() directamente.
-	function easeEditorial(t) {
-		const p0 = 0,
-			p1 = 0.22,
-			p2 = 0.36,
-			p3 = 1;
-		// De Casteljau sobre los puntos de control Y (X se usa solo para
-		// resolver t en curvas CSS reales; para una animación de scroll simple
-		// alcanza con aplicar la curva directamente sobre el tiempo).
+	// cubic-bezier(0.22, 1, 0.36, 1) de tokens.css (--ease-editorial),
+	// aproximada a mano porque rAF no puede evaluar cubic-bezier()
+	// directamente: se aplica la curva Y sobre el tiempo, que para un scroll
+	// simple alcanza.
+	function easeEditorial(t: number) {
 		const u = 1 - t;
-		return 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3 + u * u * u * p0;
+		return 3 * u * u * t * 0.22 + 3 * u * t * t * 0.36 + t * t * t;
 	}
 
-	function animatedScrollTo(targetY) {
+	function animatedScrollTo(targetY: number) {
 		const startY = window.scrollY;
 		const diff = targetY - startY;
 		if (Math.abs(diff) < 1) return;
 
-		if (prefersReducedMotion) {
+		if (prefersReducedMotion.matches) {
 			window.scrollTo({ top: targetY, left: 0, behavior: "instant" });
 			return;
 		}
@@ -63,9 +47,8 @@ const targets: Record<string, string | null> = {
 		const duration = 600; // --duration-slow, tokens.css
 		const start = performance.now();
 
-		function step(now) {
-			const elapsed = now - start;
-			const t = Math.min(elapsed / duration, 1);
+		function step(now: number) {
+			const t = Math.min((now - start) / duration, 1);
 			window.scrollTo({ top: startY + diff * easeEditorial(t), left: 0, behavior: "instant" });
 			if (t < 1) requestAnimationFrame(step);
 		}
@@ -79,14 +62,20 @@ const targets: Record<string, string | null> = {
 		if (!link) return;
 
 		const id = link.getAttribute("href")?.slice(1);
-		if (!id || !(id in targets)) return; // no es una de las 5 secciones conocidas: comportamiento nativo sin tocar
+		const section = id ? document.getElementById(id) : null;
+		if (!section?.hasAttribute("data-section")) return; // no es una sección: comportamiento nativo
 
 		event.preventDefault();
 
-		const sentinelId = targets[id];
-		const targetY = sentinelId === null ? 0 : (document.getElementById(sentinelId)?.getBoundingClientRect().top ?? 0) + window.scrollY;
+		// Sin sentinel antes = primera sección, tope real de la página.
+		const marker = section.previousElementSibling;
+		const sectionTop = marker?.hasAttribute("data-section-sentinel") ? marker.getBoundingClientRect().bottom + window.scrollY : 0;
+		const offset = parseFloat(getComputedStyle(section).scrollMarginTop) || 0;
 
-		animatedScrollTo(targetY);
+		animatedScrollTo(Math.max(0, sectionTop - offset));
 		history.pushState(null, "", `#${id}`);
+		// Para teclado y lectores de pantalla: el foco sigue desde la sección
+		// de destino, como haría un ancla nativa.
+		section.focus({ preventScroll: true });
 	});
 </script>

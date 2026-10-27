@@ -2,12 +2,18 @@
 import { site } from "../../data/site";
 import FigureCutout from "../collage/FigureCutout.astro";
 import { MessageCircle } from "lucide-astro";
+import type { SectionProps } from "../../lib/sections";
+import Section from "../layout/Section.astro";
 
 // TODO: extraer a src/lib/whatsapp/messages.ts (VOICE.md §3.4).
 const defaultMessage = "Hola Pantu, tengo una pregunta.";
 const whatsappHref = site.whatsappPhone
 	? `https://wa.me/${site.whatsappPhone}?text=${encodeURIComponent(defaultMessage)}`
 	: undefined;
+
+type Props = SectionProps;
+
+const { id, variant, nav } = Astro.props;
 ---
 
 <!-- BRIEF.md §05 — Pantu: aparición contextual, nunca widget flotante permanente (DESIGN.md §6.5). -->
@@ -55,7 +61,7 @@ const whatsappHref = site.whatsappPhone
      no necesita ser sticky para "tapar" a Archivo — eso lo logra Archivo
      quedando pegada (ver su comentario) mientras Pantu, atrás en el DOM,
      pinta por encima con normal scroll. -->
-<section id="pantu" class="relative isolate flex min-h-screen flex-col items-center justify-center gap-4 bg-white-3 px-6 py-20 text-center">
+<Section id={id} variant={variant} nav={nav} sticky={false} class="isolate flex min-h-screen flex-col items-center justify-center gap-4 px-6 py-20 text-center">
 	<FigureCutout
 		src="/images/libros.png"
 		alt="Pila de libros de psicoanálisis y filosofía"
@@ -69,8 +75,8 @@ const whatsappHref = site.whatsappPhone
 	<p class="font-body max-w-[32ch] rounded-2xl bg-white px-5 py-3 text-base text-carbon-black">
 		👋 ¡Hola! Soy Pantu, el asistente virtual de Inconsciente en Pantuflas.
 	</p>
-	<p class="font-body text-xl font-bold text-carbon-black">¿No encontraste lo que buscabas?</p>
-	<p class="font-body text-base text-carbon-black/70">Pantu puede ayudarte.</p>
+	<p class="font-body text-xl font-bold text-fg">¿No encontraste lo que buscabas?</p>
+	<p class="font-body text-base text-fg/70">Pantu puede ayudarte.</p>
 	<a
 		href={whatsappHref ?? "#"}
 		class="font-body flex items-center gap-2 rounded-full bg-bitter-chocolate px-6 py-3 text-sm font-bold text-white"
@@ -81,4 +87,4 @@ const whatsappHref = site.whatsappPhone
 		<MessageCircle class="h-4 w-4" aria-hidden="true" />
 		Hablar con Pantu
 	</a>
-</section>
+</Section>

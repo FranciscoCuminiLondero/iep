@@ -1,80 +1,90 @@
 ---
-// Índice flotante de secciones — aparece recién al salir del Hero (mismo
-// patrón de IntersectionObserver que el logo de Header.astro: observa
-// #hero-end, NO #hero, toggle por data-attribute, sin animación si
-// prefers-reduced-motion porque ya está cubierto por la regla global).
-// #hero-end es un sentinel de 1px agregado en index.astro justo después de
-// <Hero />: hace falta porque desde md: Hero es sticky y queda
-// geométricamente "intersectando" el viewport durante casi todo el scroll
-// de la página aunque las secciones siguientes lo tapen visualmente —
-// observar #hero directo nunca dispara el cambio y este índice queda
-// oculto para siempre (ver comentario completo en Header.astro). rootMargin
-// recorta el 50% SUPERIOR del área de detección, dejando como "root" solo
-// la mitad de abajo del viewport — el sentinel deja de intersectarla apenas
-// cruza la mitad de la pantalla (si no, con min-h-screen y contenido más
-// bajo que la pantalla, queda un relleno vacío que había que scrollear de
-// más). Fijo del lado
-// izquierdo, alineado con el margen de contenido del layout (mismos insets
-// que el padding lateral de las secciones, DESIGN.md §3.3). Oculto en
-// mobile — poco espacio lateral, prioridad al contenido. También se oculta
-// apenas aparece el Footer (#contacto): ya tiene su propia navegación,
-// mismo criterio que el logo flotante de Header.astro.
-const sections = [
-	{ label: "Inicio", href: "#hero" },
-	{ label: "Próximo curso", href: "#proximo-curso" },
-	{ label: "Sobre nosotros", href: "#quienes-somos" },
-	{ label: "Archivo", href: "#archivo" },
-	{ label: "Pantu", href: "#pantu" },
-];
+// Índice de secciones (BACKLOG.md §8-9): 3 pestañas rectangulares, fondo
+// bordó, texto blanco. Un solo <nav> con dos formatos:
+//   - ≥768px: columna fija a la izquierda, a toda altura. Ocupa su propio
+//     ancho (global.css le reserva --nav-rail-w con padding-left en body),
+//     así nunca tapa contenido.
+//   - <768px: barra fija arriba, de alto --nav-bar-h, para no sacarle ancho
+//     al contenido. El Hero suma ese alto a su padding de arriba y las
+//     secciones lo usan de scroll-margin-top (Section.astro).
+// Siempre visible, también sobre el Hero (reemplaza al menú hamburguesa
+// mobile y al índice flotante anterior, que se ocultaban en el Hero).
+//
+// La pestaña de la sección que se está viendo lleva aria-current (ver
+// script). La navegación por click la resuelve ScrollNav.astro.
+import { navTabs } from "../../data/navigation";
 ---
 
 <nav
 	id="section-index"
-	data-visible="false"
 	aria-label="Secciones de la página"
-	class="pointer-events-none fixed top-1/2 left-6 z-20 hidden -translate-y-1/2 flex-col gap-3 opacity-0 transition-opacity duration-300 md:left-10 md:flex lg:left-16 data-[visible=true]:pointer-events-auto data-[visible=true]:opacity-100"
+	class="fixed inset-x-0 top-0 z-30 h-(--nav-bar-h) border-b border-white/20 bg-bitter-chocolate md:inset-x-auto md:bottom-0 md:left-0 md:h-auto md:w-(--nav-rail-w) md:border-r md:border-b-0"
 >
-	{
-		sections.map((section) => (
-			<a
-				href={section.href}
-				class="font-body text-xs font-bold tracking-[0.05em] text-carbon-black/45 uppercase transition-colors hover:text-bitter-chocolate"
-			>
-				{section.label}
-			</a>
-		))
-	}
+	<ul class="flex h-full md:flex-col md:justify-center md:gap-1 md:px-3">
+		{
+			navTabs.map((tab) => (
+				<li class="flex flex-1 md:flex-none">
+					<a
+						href={`#${tab.id}`}
+						data-tab={tab.id}
+						class="font-body flex w-full items-center justify-center px-2 text-center text-[clamp(0.6875rem,3.2vw,0.875rem)] leading-tight font-bold tracking-[0.04em] text-white uppercase transition-colors outline-current hover:bg-white/10 focus-visible:outline-2 focus-visible:-outline-offset-4 aria-[current=location]:bg-white aria-[current=location]:text-bitter-chocolate md:justify-start md:px-4 md:py-4 md:text-left md:text-base"
+					>
+						{tab.label}
+					</a>
+				</li>
+			))
+		}
+	</ul>
 </nav>
 
 <script>
-	const index = document.getElementById("section-index");
-	const hero = document.getElementById("hero-end");
-	const footer = document.getElementById("contacto");
+	// Resalta la pestaña de la sección que se está viendo. Cada sección
+	// arranca justo después del sentinel de la anterior (index.astro); se
+	// observan esos sentinels y no las secciones, porque desde md las
+	// secciones son sticky y siguen "intersectando" el viewport aunque otra
+	// las tape (mismo motivo que en Header.astro y ScrollNav.astro).
+	//
+	// rootMargin: el área de detección va desde muy arriba de la página hasta
+	// el 40% del viewport. Un sentinel "intersecta" mientras está por encima
+	// de esa línea — o sea, mientras su sección ya empezó. Cubrir todo lo de
+	// arriba (no solo una franja) hace que un salto largo de scroll también
+	// dispare el cambio. La sección actual es la última que ya empezó.
+	const nav = document.getElementById("section-index");
+	const links = nav ? [...nav.querySelectorAll<HTMLAnchorElement>("a[data-tab]")] : [];
+	const sections = [...document.querySelectorAll<HTMLElement>("[data-section]")];
 
-	if (index && hero && footer) {
-		let heroVisible = true;
-		let footerVisible = false;
+	if (links.length > 0 && sections.length > 0 && "IntersectionObserver" in window) {
+		const started = new Set<HTMLElement>([sections[0]]);
+		const sectionByMarker = new Map<Element, HTMLElement>();
 
-		const updateVisibility = () => {
-			index.dataset.visible = heroVisible || footerVisible ? "false" : "true";
+		for (const section of sections.slice(1)) {
+			const marker = section.previousElementSibling;
+			if (marker?.hasAttribute("data-section-sentinel")) sectionByMarker.set(marker, section);
+		}
+
+		const updateActive = () => {
+			const current = sections.findLast((section) => started.has(section));
+			const tab = current?.dataset.nav;
+			for (const link of links) {
+				if (tab && link.dataset.tab === tab) link.setAttribute("aria-current", "location");
+				else link.removeAttribute("aria-current");
+			}
 		};
 
-		const heroObserver = new IntersectionObserver(
-			([entry]) => {
-				heroVisible = entry.isIntersecting;
-				updateVisibility();
+		const observer = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					const section = sectionByMarker.get(entry.target);
+					if (!section) continue;
+					if (entry.isIntersecting) started.add(section);
+					else started.delete(section);
+				}
+				updateActive();
 			},
-			{ threshold: 0, rootMargin: "-50% 0px 0px 0px" },
+			{ rootMargin: "100000px 0px -60% 0px", threshold: 0 },
 		);
-		heroObserver.observe(hero);
 
-		const footerObserver = new IntersectionObserver(
-			([entry]) => {
-				footerVisible = entry.isIntersecting;
-				updateVisibility();
-			},
-			{ threshold: 0 },
-		);
-		footerObserver.observe(footer);
+		sectionByMarker.forEach((_, marker) => observer.observe(marker));
+		updateActive();
 	}
 </script>

@@ -5,6 +5,12 @@ import FigureCutout from "../collage/FigureCutout.astro";
 import CollagePiece from "../collage/CollagePiece.astro";
 import NextSectionLink from "../ui/NextSectionLink.astro";
 import { MessageCircle } from "lucide-astro";
+import type { SectionProps } from "../../lib/sections";
+import Section from "../layout/Section.astro";
+
+type Props = SectionProps;
+
+const { id, variant, nav, next } = Astro.props;
 
 const course = await courseRepository.getUpcoming();
 
@@ -17,9 +23,9 @@ const whatsappHref =
 
 <!-- BRIEF.md §02 — Próximo curso: pieza protagonista, tratamiento de afiche (DESIGN.md §6.2). -->
 <!-- TODO: reemplazar este placeholder por el tratamiento tipo afiche/editorial completo. -->
-<!-- Layout de dos columnas desde md: flyer (recuadro) a la izquierda,
+<!-- Layout de dos columnas desde lg: flyer (recuadro) a la izquierda,
      texto a la derecha. El título mostrado es course.title (el nombre
-     real del curso), no course.hook. md:sticky md:top-0: efecto "cards" al
+     real del curso), no course.hook. lg:sticky lg:top-0: efecto "cards" al
      pasar de sección (la siguiente sube y tapa esta mientras queda
      pegada).
 
@@ -32,8 +38,13 @@ const whatsappHref =
      apila flyer + Lacan + texto en columna y termina midiendo 1058px
      contra ~842px de viewport (medido); con sticky, el botón de WhatsApp
      (más abajo del todo) no se vuelve alcanzable hasta un tramo de scroll
-     enorme, para cuando "Quiénes somos" ya la tapó. -->
-<section id="proximo-curso" class="relative flex min-h-screen flex-col items-center justify-center gap-10 bg-white px-6 py-20 text-center md:sticky md:top-0 md:flex-row md:gap-16 md:text-left">
+     enorme, para cuando "Quiénes somos" ya la tapó.
+
+     Fila y sticky recién desde lg (no md): flyer + Lacan + texto necesitan
+     ~850px, y entre 768 y 1023px no entran (menos todavía con la columna
+     del índice a la izquierda) — se cortaban por los dos costados. En ese
+     rango va apilada y sin sticky, igual que en mobile. -->
+<Section id={id} variant={variant} nav={nav} sticky="lg" class="flex min-h-screen flex-col items-center justify-center gap-10 px-6 py-20 text-center lg:flex-row lg:gap-16 lg:text-left">
 	{
 		course ? (
 			<>
@@ -54,20 +65,21 @@ const whatsappHref =
 				<FigureCutout
 					src="/images/lacan.png"
 					alt="Jacques Lacan"
+					portrait
 					class="h-[36vh] shrink-0 md:h-[42vh] lg:h-[46vh]"
 				/>
 
-				<div class="relative isolate flex max-w-md flex-col items-center gap-4 md:items-start">
-					<p class="font-body text-xs font-bold tracking-[0.1em] text-bitter-chocolate uppercase">Próximo curso</p>
-					<h2 class="font-body text-[clamp(1.75rem,6vw,3.25rem)] leading-[1.05] font-black text-carbon-black">
+				<div class="relative isolate flex max-w-md flex-col items-center gap-4 lg:items-start">
+					<p class="font-body text-xs font-bold tracking-[0.1em] text-accent uppercase">Próximo curso</p>
+					<h2 class="font-body text-[clamp(1.75rem,6vw,3.25rem)] leading-[1.05] font-black text-fg">
 						{course.title}
 					</h2>
 					{(course.date || course.modality) && (
-						<p class="font-body text-sm font-bold text-carbon-black/70">
+						<p class="font-body text-sm font-bold text-fg/70">
 							{[course.date, course.modality].filter(Boolean).join(" · ")}
 						</p>
 					)}
-					<p class="font-body text-base text-carbon-black/70">{course.description}</p>
+					<p class="font-body text-base text-fg/70">{course.description}</p>
 					<a
 						href={whatsappHref ?? "#"}
 						class="font-body flex items-center gap-2 rounded-full bg-carbon-black px-6 py-3 text-sm font-bold text-white"
@@ -82,7 +94,7 @@ const whatsappHref =
 						// Figura relacionada al tema del curso, tomada del propio contenido
 						// (DESIGN.md §6.2). Patrón "personaje-recorte" (no CollagePiece): se ve
 						// completa, sin rotación ni sombra. Pegada al borde derecho de esta
-						// columna de texto (left-full) desde md — en mobile/tablet "left-full"
+						// columna de texto (left-full) desde lg — en mobile/tablet "left-full"
 						// no tiene sentido (una sola columna, angosta): en vez de eso queda
 						// chica, en la esquina inferior derecha de esta MISMA columna, con
 						// -z-10 (igual que Freud/Bauman/libros) para quedar detrás del texto
@@ -94,14 +106,14 @@ const whatsappHref =
 						<FigureCutout
 							src={course.image}
 							alt={`Figura relacionada con "${course.title}"`}
-							class="absolute right-0 bottom-0 -z-10 h-20 sm:h-28 md:top-0 md:right-auto md:bottom-auto md:left-full md:z-auto md:h-[42vh] lg:h-[50vh]"
+							class="absolute right-0 bottom-0 -z-10 h-20 sm:h-28 lg:top-0 lg:right-auto lg:bottom-auto lg:left-full lg:z-auto lg:h-[50vh]"
 						/>
 					)}
 				</div>
 			</>
 		) : (
-			<p class="font-body text-base text-carbon-black/45">No hay un próximo curso publicado todavía.</p>
+			<p class="font-body text-base text-fg/70">No hay un próximo curso publicado todavía.</p>
 		)
 	}
-	<NextSectionLink target="quienes-somos" label="Ir a quiénes somos" />
-</section>
+	{next && <NextSectionLink target={next.id} label={next.label} />}
+</Section>

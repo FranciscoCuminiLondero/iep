@@ -3,69 +3,71 @@ import Layout from "../layouts/Layout.astro";
 import Header from "../components/layout/Header.astro";
 import Footer from "../components/layout/Footer.astro";
 import SectionIndex from "../components/ui/SectionIndex.astro";
-import MobileMenu from "../components/ui/MobileMenu.astro";
 import ScrollNav from "../components/ui/ScrollNav.astro";
 import Hero from "../components/sections/Hero.astro";
 import UpcomingCourse from "../components/sections/UpcomingCourse.astro";
 import About from "../components/sections/About.astro";
 import CourseArchive from "../components/sections/CourseArchive.astro";
+import Education from "../components/sections/Education.astro";
 import PantuCTA from "../components/sections/PantuCTA.astro";
+import type { NavTabId } from "../data/navigation";
+import { variantAt } from "../lib/sections";
+
+// Orden de las secciones — única fuente de verdad. La variante bordó/blanco
+// sale de la posición (variantAt), así que reordenar, agregar o sacar una
+// sección mantiene la alternancia sola (BACKLOG.md §1). `nav` es la pestaña
+// del índice que se resalta en esa sección; `label`, el texto accesible del
+// link "siguiente sección" que apunta a ella.
+const sections: { id: string; Component: (props: any) => any; nav?: NavTabId; label: string }[] = [
+	{ id: "hero", Component: Hero, label: "Ir al inicio" },
+	{ id: "cursos", Component: UpcomingCourse, nav: "cursos", label: "Ir al próximo curso" },
+	{ id: "sobre-nosotros", Component: About, nav: "sobre-nosotros", label: "Ir a sobre nosotros" },
+	{ id: "archivo", Component: CourseArchive, nav: "cursos", label: "Ir al archivo de cursos" },
+	{ id: "educacion", Component: Education, nav: "educacion", label: "Ir a educación" },
+	{ id: "pantu", Component: PantuCTA, label: "Ir a Pantu" },
+];
 ---
 
 <!-- One Page — orden de secciones según BRIEF.md §3. -->
 <Layout>
 	<Header />
 	<SectionIndex />
-	<MobileMenu />
 	<ScrollNav />
 	<main>
-		<!-- Hero, Próximo curso, Quiénes somos Y Archivo son sticky top-0 (ver
-		     comentario en Hero.astro y en CourseArchive.astro) — el efecto
-		     "cards" (cada una tapada por la siguiente) depende de que TODAS
-		     compartan el mismo containing block, incluyendo Pantu aunque Pantu
-		     mismo NO sea sticky: su altura es la que le da a Archivo el
-		     "tiempo" de scroll para quedar pegada antes de soltarse. Sin Pantu
-		     adentro de este <div>, Archivo se soltaría de inmediato al llegar
-		     a su propio final y no habría nada que la tape.
+		<!-- Todas las secciones salvo Pantu son md:sticky top-0 (Section.astro):
+		     efecto "cards", cada una tapada por la siguiente. Depende de que
+		     TODAS compartan este mismo containing block, incluyendo Pantu aunque
+		     Pantu misma NO sea sticky: su altura es la que le da a la anterior el
+		     "tiempo" de scroll para quedar pegada antes de soltarse.
 
 		     El Footer se deja AFUERA a propósito: es mucho más bajo que una
 		     pantalla completa, así que si compartiera este límite, la última
-		     sticky (Archivo) quedaría pegada mucho más allá de su propio
-		     final — exactamente el bug original (Freud flotando sobre el
-		     Footer). Por la misma razón Pantu nunca lleva sticky (su propio
-		     comentario lo explica: quedaría un pedazo de ella asomando arriba
-		     del Footer para siempre). -->
+		     sticky quedaría pegada mucho más allá de su propio final (el bug
+		     original: Freud flotando sobre el Footer). Por la misma razón Pantu
+		     nunca lleva sticky (ver su comentario).
+
+		     Después de cada sección va un sentinel NO sticky (`<id>-end`), con
+		     doble uso:
+		     1) Header.astro y SectionIndex.astro los observan (no pueden observar
+		        las secciones: al ser sticky siguen "intersectando" el viewport
+		        durante casi todo el scroll aunque otras las tapen).
+		     2) ScrollNav.astro usa el sentinel ANTERIOR a una sección como
+		        destino real al navegar por hash, por el mismo motivo: una
+		        sección ya pegada mide top:0 aunque esté tapada, y un ancla
+		        nativa no movería el scroll. El sentinel siempre refleja su
+		        posición real en el documento. -->
 		<div class="relative">
-			<Hero />
-			<!-- Sentinels NO sticky entre cada card, con doble uso:
-			     1) Header.astro/SectionIndex.astro/MobileMenu.astro los observan
-			        para mostrar/ocultar su UI (no pueden observar la sección sticky
-			        misma: comparte containing block con todo este wrapper — ver
-			        comentario en Hero.astro — así que geométricamente sigue
-			        "intersectando" el viewport durante casi todo el scroll aunque
-			        las siguientes la tapen visualmente, y el observer nunca se
-			        dispararía).
-			     2) ScrollNav.astro los usa como destino real al navegar por hash
-			        (#proximo-curso, #quienes-somos) en vez de la sección sticky
-			        misma, por el MISMO motivo: una vez que una sección sticky ya
-			        quedó "pegada" en top:0, su propio getBoundingClientRect().top
-			        se mide en 0 aunque esté tapada por otra más adelante en el
-			        scroll — un <a href="#quienes-somos"> apuntando directo a esa
-			        sección hace que el navegador la vea "ya visible" y no mueva el
-			        scroll nada, aunque en pantalla se siga viendo la sección
-			        siguiente tapándola. Esto es lo que reportaba el índice
-			        fallando "a veces sí, a veces no" en desktop (el único breakpoint
-			        con sticky): funcionaba al bajar a una sección todavía no
-			        alcanzada, y fallaba en silencio al volver a una ya pasada. Estos
-			        sentinels, al no ser sticky, siempre reflejan su posición real en
-			        el documento sin importar qué esté pegado encima. -->
-			<div id="hero-end" class="h-px w-full" aria-hidden="true"></div>
-			<UpcomingCourse />
-			<div id="proximo-curso-end" class="h-px w-full" aria-hidden="true"></div>
-			<About />
-			<div id="quienes-somos-end" class="h-px w-full" aria-hidden="true"></div>
-			<CourseArchive />
-			<PantuCTA />
+			{
+				sections.map(({ id, Component, nav }, index) => {
+					const next = sections[index + 1];
+					return (
+						<>
+							<Component id={id} variant={variantAt(index)} nav={nav} next={next && { id: next.id, label: next.label }} />
+							<div id={`${id}-end`} data-section-sentinel class="h-px w-full" aria-hidden="true" />
+						</>
+					);
+				})
+			}
 		</div>
 	</main>
 	<Footer />

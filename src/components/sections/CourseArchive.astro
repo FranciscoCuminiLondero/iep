@@ -4,6 +4,12 @@ import FigureCutout from "../collage/FigureCutout.astro";
 import NextSectionLink from "../ui/NextSectionLink.astro";
 import CourseAccordionItem from "../course/CourseAccordionItem.astro";
 import { ChevronDown } from "lucide-astro";
+import type { SectionProps } from "../../lib/sections";
+import Section from "../layout/Section.astro";
+
+type Props = SectionProps;
+
+const { id, variant, nav, next } = Astro.props;
 
 const pastCourses = await courseRepository.getPast();
 
@@ -61,7 +67,12 @@ const restCourses = pastCourses.slice(VISIBLE_COUNT);
 
      Tamaño h-48 en mobile (el doble de la h-24 original, para que se note
      más) y sm:h-16 en tablet (la mitad de esa h-32 original, para que en
-     esa franja intermedia no compita tanto con el encabezado). -->
+     esa franja intermedia no compita tanto con el encabezado).
+
+     Desde md, 24vh/36vh (antes 56vh): con la columna del índice la sección
+     es ~190px más angosta y Bauman quedaba debajo del arranque de la lista,
+     con los títulos de curso ilegibles encima de la foto. Misma posición,
+     más chico — mismo criterio que los Freud de About.astro. -->
 
 <!-- md:sticky md:top-0, mismo efecto "cards" que Hero/Próximo curso/Quiénes
      somos (containing block compartido en index.astro, incluyendo a Pantu
@@ -86,16 +97,17 @@ const restCourses = pastCourses.slice(VISIBLE_COUNT);
      página — ver la explicación completa en el comentario de Freud, en
      About.astro (mismo problema exacto: position:relative sin z-index no
      crea contexto de stacking propio, a diferencia de sticky). -->
-<section id="archivo" class="relative isolate flex min-h-screen flex-col items-center justify-center gap-10 bg-white px-6 py-20 md:sticky md:top-0">
+<Section id={id} variant={variant} nav={nav} class="isolate flex min-h-screen flex-col items-center justify-center gap-10 px-6 py-20">
 	<FigureCutout
 		src="/images/Zygmunt-Bauman.png"
 		alt="Retrato de Zygmunt Bauman"
-		class="absolute -top-8 -left-20 -z-10 h-48 sm:-left-14 sm:h-16 md:-top-16 md:-left-28 md:h-[56vh]"
+		portrait
+		class="absolute -top-8 -left-20 -z-10 h-48 sm:-left-14 sm:h-16 md:-top-16 md:-left-28 md:h-[24vh] lg:h-[36vh]"
 	/>
-	<h2 class="font-title text-[clamp(1.5rem,4.5vw,2.5rem)] font-extrabold text-carbon-black uppercase">
+	<h2 class="font-title text-[clamp(1.5rem,4.5vw,2.5rem)] font-extrabold text-fg uppercase">
 		Archivo de cursos
 	</h2>
-	<p class="font-body -mt-6 max-w-[50ch] text-sm text-carbon-black/60">
+	<p class="font-body -mt-6 max-w-[50ch] text-sm text-fg/70">
 		Todos estos cursos siguen disponibles — podés solicitarlos para hacerlos cuando quieras.
 	</p>
 	<ul class="flex w-full max-w-2xl flex-col">
@@ -112,9 +124,9 @@ const restCourses = pastCourses.slice(VISIBLE_COUNT);
 						<summary class="order-2 mt-4 flex cursor-pointer list-none items-center justify-center gap-2 text-center">
 							{/* Dos textos, uno tapa al otro según el estado — sin JS,
 							    con group-open (el group es el propio <details>). */}
-							<span class="font-body text-sm font-bold text-bitter-chocolate group-open:hidden">Ver {restCourses.length} cursos más</span>
-							<span class="font-body hidden text-sm font-bold text-bitter-chocolate group-open:inline">Ocultar {restCourses.length} cursos</span>
-							<ChevronDown class="h-4 w-4 text-bitter-chocolate transition-transform group-open:rotate-180" aria-hidden="true" />
+							<span class="font-body text-sm font-bold text-accent group-open:hidden">Ver {restCourses.length} cursos más</span>
+							<span class="font-body hidden text-sm font-bold text-accent group-open:inline">Ocultar {restCourses.length} cursos</span>
+							<ChevronDown class="h-4 w-4 text-accent transition-transform group-open:rotate-180" aria-hidden="true" />
 						</summary>
 						<ul class="order-1 flex flex-col">
 							{restCourses.map((course) => (
@@ -126,8 +138,8 @@ const restCourses = pastCourses.slice(VISIBLE_COUNT);
 			)
 		}
 	</ul>
-	<NextSectionLink target="pantu" label="Ir a Pantu" />
-</section>
+	{next && <NextSectionLink target={next.id} label={next.label} />}
+</Section>
 
 <style is:global>
 	/* Apaga el sticky de #archivo apenas hay algún <details> abierto adentro
