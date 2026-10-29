@@ -16,10 +16,9 @@
 // así que siempre refleja la posición real en el documento.
 //
 // También descuenta el scroll-margin-top de la sección (en mobile, el alto de
-// la barra de navegación fija — Section.astro), y reemplaza el
-// scroll-behavior:smooth nativo por una animación con la curva y duración de
-// marca (--ease-editorial, --duration-slow en tokens.css). Sin animación si
-// el usuario tiene prefers-reduced-motion.
+// la barra de navegación fija — Section.astro). La animación es la de
+// lib/scroll.ts (duración según distancia, sin animación con
+// prefers-reduced-motion).
 //
 // Avisa el inicio y el fin de cada navegación con los eventos
 // "section-nav:start" (detail: la sección de destino) y "section-nav:end":
@@ -28,45 +27,7 @@
 ---
 
 <script>
-	const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-
-	// cubic-bezier(0.22, 1, 0.36, 1) de tokens.css (--ease-editorial),
-	// aproximada a mano porque rAF no puede evaluar cubic-bezier()
-	// directamente: se aplica la curva Y sobre el tiempo, que para un scroll
-	// simple alcanza.
-	function easeEditorial(t: number) {
-		const u = 1 - t;
-		return 3 * u * u * t * 0.22 + 3 * u * t * t * 0.36 + t * t * t;
-	}
-
-	let activeAnimation = 0;
-
-	function animatedScrollTo(targetY: number, onDone: () => void) {
-		const animation = ++activeAnimation;
-		const startY = window.scrollY;
-		const diff = targetY - startY;
-
-		if (Math.abs(diff) < 1 || prefersReducedMotion.matches) {
-			window.scrollTo({ top: targetY, left: 0, behavior: "instant" });
-			// Un frame después: deja que los IntersectionObserver vean la
-			// posición final antes de soltar la pestaña fijada.
-			requestAnimationFrame(() => requestAnimationFrame(onDone));
-			return;
-		}
-
-		const duration = 600; // --duration-slow, tokens.css
-		const start = performance.now();
-
-		function step(now: number) {
-			// Otro click arrancó una navegación nueva: esta se abandona.
-			if (animation !== activeAnimation) return;
-			const t = Math.min((now - start) / duration, 1);
-			window.scrollTo({ top: startY + diff * easeEditorial(t), left: 0, behavior: "instant" });
-			if (t < 1) requestAnimationFrame(step);
-			else requestAnimationFrame(() => requestAnimationFrame(onDone));
-		}
-		requestAnimationFrame(step);
-	}
+	import { smoothScrollTo } from "../../lib/scroll";
 
 	document.addEventListener("click", (event) => {
 		const target = event.target;
@@ -86,10 +47,7 @@
 		const offset = parseFloat(getComputedStyle(section).scrollMarginTop) || 0;
 
 		document.dispatchEvent(new CustomEvent("section-nav:start", { detail: section }));
-		const animation = activeAnimation + 1;
-		animatedScrollTo(Math.max(0, sectionTop - offset), () => {
-			if (animation === activeAnimation) document.dispatchEvent(new CustomEvent("section-nav:end"));
-		});
+		smoothScrollTo(Math.max(0, sectionTop - offset), () => document.dispatchEvent(new CustomEvent("section-nav:end")));
 		history.pushState(null, "", `#${id}`);
 		// Para teclado y lectores de pantalla: el foco sigue desde la sección
 		// de destino, como haría un ancla nativa.

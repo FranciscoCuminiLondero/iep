@@ -1,8 +1,15 @@
 ---
-// Fila de curso del Archivo — desplegable al tocar, <details> nativo (sin
-// JS, accesible por teclado y lectores de pantalla por default).
-import { ChevronDown } from "lucide-astro";
+// Fila de curso del Archivo — <details> nativo: sin JS sigue abriendo y
+// cerrando, accesible por teclado y lectores de pantalla por default. El
+// script de abajo solo le suma la animación y el reacomodo del scroll.
+//
+// Al abrir: flyer (si existe el archivo, ver lib/courses/images.ts), temario
+// y CV, y el botón a WhatsApp con el código del curso para que Pantu
+// responda directo con su ficha (lib/whatsapp/messages.ts). El botón va
+// fuera del <summary> para que tocarlo no cierre la fila.
+import { ChevronDown, MessageCircle } from "lucide-astro";
 import type { Course } from "../../types/course";
+import { courseInfoMessage, whatsappUrl } from "../../lib/whatsapp/messages";
 
 interface Props {
 	course: Course;
@@ -12,14 +19,90 @@ const { course } = Astro.props;
 ---
 
 <li class="border-b border-fg/15">
-	<details class="group py-4">
+	<details data-accordion class="group py-4">
 		<summary class="flex cursor-pointer list-none items-start justify-between gap-4">
 			<span class="font-body text-fg">
 				<span class="block font-bold">{course.title}</span>
 				{course.instructor && <span class="mt-1 block text-sm text-fg/70">{course.instructor}</span>}
 			</span>
-			<ChevronDown class="mt-1 h-5 w-5 shrink-0 text-fg/70 transition-transform group-open:rotate-180" aria-hidden="true" />
+			<ChevronDown class="mt-1 h-5 w-5 shrink-0 text-fg/70 transition-transform duration-300 group-open:rotate-180" aria-hidden="true" />
 		</summary>
-		{course.detailsHtml && <div class="course-details mt-4" set:html={course.detailsHtml} />}
+		<div data-accordion-content class="overflow-hidden">
+			{course.flyer && <img src={course.flyer} alt={`Flyer del curso "${course.title}"`} loading="lazy" class="mt-4 w-full max-w-xs" />}
+			{course.detailsHtml && <div class="course-details mt-4" set:html={course.detailsHtml} />}
+			{/* Colores invertidos de la sección: blanco con texto bordó sobre
+			    bordó, negro con texto blanco sobre blanco. */}
+			<a
+				href={whatsappUrl(courseInfoMessage(course))}
+				target="_blank"
+				rel="noopener"
+				class="font-body mt-5 mb-1 inline-flex items-center gap-2 rounded-full bg-fg px-5 py-2.5 text-sm font-bold text-(--section-bg)"
+			>
+				<MessageCircle class="h-4 w-4" aria-hidden="true" />
+				Pedir información
+			</a>
+		</div>
 	</details>
 </li>
+
+<script>
+	// Apertura y cierre animados (alto + opacidad, --ease-editorial):
+	// - Al abrir, el scroll lleva la fila arriba de la pantalla, para que se
+	//   vea el inicio de la descripción.
+	// - Al cerrar, si la fila quedó por encima de la pantalla (la
+	//   descripción era larga), el scroll vuelve a ella.
+	// Un click durante la animación la invierte desde donde esté.
+	import { scrollTargetFor, smoothScrollTo, topOffsetFor } from "../../lib/scroll";
+
+	const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+	const DURATION = 400; // --duration-base, tokens.css
+	const EASING = "cubic-bezier(0.22, 1, 0.36, 1)"; // --ease-editorial
+	const GAP = 16; // aire entre el tope de la pantalla (o la barra) y la fila
+
+	for (const details of document.querySelectorAll<HTMLDetailsElement>("details[data-accordion]")) {
+		const summary = details.querySelector("summary");
+		const content = details.querySelector<HTMLElement>("[data-accordion-content]");
+		if (!summary || !content) continue;
+
+		let animation: Animation | null = null;
+		let closing = false;
+
+		const animateHeight = (from: number, to: number, onFinish?: () => void) => {
+			animation?.cancel();
+			animation = content.animate(
+				{ height: [`${from}px`, `${to}px`], opacity: [from === 0 ? 0 : 1, to === 0 ? 0 : 1] },
+				{ duration: DURATION, easing: EASING },
+			);
+			animation.onfinish = () => {
+				animation = null;
+				onFinish?.();
+			};
+		};
+
+		const open = () => {
+			const from = animation ? content.getBoundingClientRect().height : 0;
+			closing = false;
+			details.open = true;
+			const to = content.scrollHeight;
+			if (!prefersReducedMotion.matches) animateHeight(from, to);
+			smoothScrollTo(scrollTargetFor(details, GAP, to - from));
+		};
+
+		const close = () => {
+			const finish = () => {
+				closing = false;
+				details.open = false;
+				if (details.getBoundingClientRect().top < topOffsetFor(details)) smoothScrollTo(scrollTargetFor(details, GAP));
+			};
+			closing = true;
+			if (prefersReducedMotion.matches) finish();
+			else animateHeight(content.getBoundingClientRect().height, 0, finish);
+		};
+
+		summary.addEventListener("click", (event) => {
+			event.preventDefault();
+			if (!details.open || closing) open();
+			else close();
+		});
+	}
+</script>

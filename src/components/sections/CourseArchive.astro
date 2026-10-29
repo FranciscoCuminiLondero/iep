@@ -84,11 +84,11 @@ const restCourses = pastCourses.slice(VISIBLE_COUNT);
         colapsada (VISIBLE_COUNT=6 + encabezado) esta sección mide 918px
         contra ~842px de viewport (medido) — ya se pasa de una pantalla
         antes de tocar nada.
-     2. La regla :has() de abajo, para cuando SÍ hay espacio (md+) pero se
-        abre "ver más" o el temario de un curso (<details>): ahí igual
-        puede superar el alto de pantalla, y apaga el sticky mientras haya
-        algo abierto — vuelve a scroll normal, reachable, hasta que se
-        cierra todo de nuevo.
+     2. Si se abre "ver más" o el temario de un curso y la sección supera
+        el alto de pantalla, Section.astro le da un top negativo: se pega
+        recién al llegar a su borde inferior, así todo queda alcanzable.
+        (Antes una regla :has() apagaba el sticky con algo abierto, pero
+        ese cambio de position hacía saltar la página al abrir/cerrar.)
 
      `isolate`: necesario para que el -z-10 de Bauman (más abajo) quede
      acotado a esta sección en vez de escaparse al contexto raíz de la
@@ -105,7 +105,7 @@ const restCourses = pastCourses.slice(VISIBLE_COUNT);
 		Archivo de cursos
 	</h2>
 	<p class="font-body -mt-6 max-w-[50ch] text-sm text-fg/70">
-		Todos estos cursos siguen disponibles — podés solicitarlos para hacerlos cuando quieras.
+		Todos estos cursos siguen disponibles — podés pedirlos por WhatsApp para hacerlos cuando quieras.
 	</p>
 	<ul class="flex w-full max-w-2xl flex-col">
 		{visibleCourses.map((course) => <CourseAccordionItem course={course} />)}
@@ -139,17 +139,6 @@ const restCourses = pastCourses.slice(VISIBLE_COUNT);
 </Section>
 
 <style is:global>
-	/* Apaga el sticky de #archivo apenas hay algún <details> abierto adentro
-	   (un curso desplegado, o el "ver más" que revela el resto de la lista)
-	   — ver comentario junto al <section> más arriba. relative, no static:
-	   Bauman (absolute) sigue necesitando a esta sección como containing
-	   block — con static, se recalcularía contra el próximo ancestro
-	   posicionado (el wrapper de las 5 secciones en index.astro) y
-	   aparecería en cualquier lado. Vuelve a sticky apenas se cierra todo. */
-	#archivo:has(details[open]) {
-		position: relative;
-	}
-
 	/* Oculta el triángulo nativo del <summary> en todos los navegadores —
 	   el chevron de Lucide ya cumple esa función. */
 	summary::-webkit-details-marker {
