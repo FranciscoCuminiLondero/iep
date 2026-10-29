@@ -1,19 +1,23 @@
 ---
 title: "Introducción General al Psicodiagnóstico"
-instructor: "Ps. Prof. Alelí Schneeberger"
-description: >
-  Ámbitos de aplicación del psicodiagnóstico, ética profesional y
-  baterías estándar.
+instructor: "Ps. Prof. Aleli Schneeberger"
+description: "Ámbitos de aplicación del psicodiagnóstico, ética profesional y baterías estándar."
 order: 6
+code: 26
 status: "archived"
 isFeatured: false
 ---
 
+**Disertante:** Ps. Prof. Aleli Schneeberger
+
+- Especialista en Psicodiagnóstico.
+- Diplomada en Pericias Judiciales.
+- Perito de Oficio.
+- Docente de la Cátedra Evaluación y Psicodiagnóstico (UNR).
+
 **Temario:**
 
-El psicodiagnóstico y sus ámbitos de aplicación. ¿Por qué y para qué un psicodiagnóstico?
-Psicodiagnóstico y ética profesional. Baterías estándar en diferentes ámbitos.
-
-**Disertante:** Ps. Prof. Alelí Schneeberger — especialista en Psicodiagnóstico, diplomada
-en Pericias Judiciales, perito de oficio, docente de la cátedra Evaluación y
-Psicodiagnóstico (UNR).
+- El Psicodiagnóstico y sus ámbitos de aplicación.
+- ¿Por qué y para qué un Psicodiagnóstico?
+- Psicodiagnóstico y ética profesional.
+- Baterías estándar en diferentes ámbitos.

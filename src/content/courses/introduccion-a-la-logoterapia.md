@@ -1,13 +1,15 @@
 ---
 title: "Introducción a la Logoterapia"
 instructor: "Prof. Ps. Cecilia Saint Girons"
-description: >
-  Los pilares de la Logoterapia de Viktor Frankl: libertad de la
-  voluntad, voluntad de sentido y sentido en la vida.
+description: "Los pilares de la Logoterapia de Viktor Frankl: libertad de la voluntad, voluntad de sentido y sentido en la vida."
 order: 9
+code: 29
 status: "archived"
 isFeatured: false
 ---
+
+**Disertante:** Prof. Ps. Cecilia Saint Girons — directora del Centro de Análisis
+Existencial "Viktor Frankl".
 
 **Contenido:**
 
@@ -17,6 +19,3 @@ isFeatured: false
 - La Logoterapia como nuevo paradigma: el enfermar humano y lo saludable.
 - La búsqueda de sentido y su efecto terapéutico.
 - ¿Vacío existencial? Conflicto, crisis y situaciones límite.
-
-**Disertante:** Prof. Ps. Cecilia Saint Girons — directora del Centro de Análisis
-Existencial "Viktor Frankl".

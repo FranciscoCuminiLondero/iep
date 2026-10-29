@@ -1,33 +1,24 @@
 ---
 title: "Introducción a la Selección de Personal"
 instructor: "Ps. Carolina Ciardi"
-description: >
-  El proceso de selección end to end, los perfiles del mundo IT, LinkedIn
-  como fuente de reclutamiento y People Analytics.
-date: "16 y 23 de septiembre"
-startsAt: 2026-09-16
-year: 2026
+description: "El proceso de selección end to end, LinkedIn como fuente de reclutamiento y los conceptos fundamentales de People Analytics."
 order: 3
-flyer: "/images/flyer-intro-seleccion-personal.png"
-status: "published"
-isFeatured: true
-whatsappMessage: 'Hola, quería consultar por el curso "Introducción a la Selección de Personal".'
+code: 23
+status: "archived"
+isFeatured: false
 ---
 
-**Temario:**
+**Disertante:** Ps. Carolina Ciardi — psicóloga especializada en el ámbito laboral,
+egresada de la Universidad Nacional de Rosario (UNR). Actualmente se desempeña como Talent
+Acquisition Head en el área de Human Capital en una consultora líder internacional.
 
-El objetivo del curso es conocer:
+**Qué vas a aprender:**
 
-- Las diferentes tareas/áreas dentro de RRHH.
-- El proceso de selección end to end: 1) determinación del perfil; 2) identificación y
-  selección de fuentes de reclutamiento; 3) screening; 4) redacción del informe del
-  candidato; 5) realización de entrevistas y preparación de la oferta económica/negociación.
-- Los diferentes perfiles del mundo IT.
-- LinkedIn como fuente de reclutamiento.
+- El proceso de selección end to end:
+  1. Definición del perfil y fuentes de reclutamiento. LinkedIn como fuente de
+     reclutamiento.
+  2. Screenings, entrevistas laborales y redacción del perfil del candidato.
+  3. Oferta económica y confirmación final.
 - People Analytics: conceptos fundamentales.
 
-Incluye bibliografía actualizada. Dirigido a estudiantes y profesionales de todas las carreras.
-
-**Disertante:** Ps. Carolina Ciardi — psicóloga especializada en el ámbito laboral, egresada
-de la Universidad Nacional de Rosario (UNR). Actualmente se desempeña como Talent
-Attraction Head en el área de Human Capital en una consultora líder internacional.
+Incluye examen final, criterio valorado en procesos de revisión de CV.

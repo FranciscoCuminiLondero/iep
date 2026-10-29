@@ -2,6 +2,7 @@ import { getCollection } from "astro:content";
 import type { CollectionEntry } from "astro:content";
 import type { Course } from "../../types/course";
 import type { CourseRepository } from "./repository";
+import { findCourseImage } from "./images";
 
 function toCourse(entry: CollectionEntry<"courses">): Course {
   const { data } = entry;
@@ -16,7 +17,9 @@ function toCourse(entry: CollectionEntry<"courses">): Course {
     year: data.year,
     modality: data.modality,
     image: data.image,
-    flyer: data.flyer,
+    flyer: data.flyer ?? findCourseImage(entry.id),
+    thumbnail: findCourseImage(`${entry.id}-circulo`),
+    code: data.code,
     instructor: data.instructor,
     order: data.order,
     // El body del Markdown (temario, bio del disertante) ya viene renderizado

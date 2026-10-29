@@ -4,11 +4,11 @@ import FigureCutout from "../collage/FigureCutout.astro";
 import { MessageCircle } from "lucide-astro";
 import type { SectionProps } from "../../lib/sections";
 import Section from "../layout/Section.astro";
+import { whatsappUrl } from "../../lib/whatsapp/messages";
 
-// TODO: extraer a src/lib/whatsapp/messages.ts (VOICE.md §3.4).
 const defaultMessage = "Hola Pantu, tengo una pregunta.";
 const whatsappHref = site.whatsappPhone
-	? `https://wa.me/${site.whatsappPhone}?text=${encodeURIComponent(defaultMessage)}`
+	? whatsappUrl(defaultMessage)
 	: undefined;
 
 type Props = SectionProps;

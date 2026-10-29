@@ -24,8 +24,14 @@ export interface Course {
   modality?: string;
   /** Recorte/figura relacionada al curso (BRIEF.md §16) — solo aplica al próximo curso. */
   image?: string;
-  /** Flyer/afiche completo del curso (estilo post de Instagram), opcional. */
+  /** Flyer/afiche completo del curso (estilo post de Instagram), opcional.
+   *  Se detecta solo en public/images/cursos/<slug> (lib/courses/images.ts). */
   flyer?: string;
+  /** Recorte central del flyer para la miniatura circular (BACKLOG.md §12).
+   *  Se detecta solo en public/images/cursos/<slug>-circulo. */
+  thumbnail?: string;
+  /** Código del curso en el bot de WhatsApp (número de nodo, 21–31). */
+  code?: number;
   /** Disertante(s), para la fila colapsada del archivo (ej. "Ps. Carolina Ciardi"). */
   instructor?: string;
   /**

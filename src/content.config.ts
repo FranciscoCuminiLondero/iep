@@ -19,6 +19,7 @@ const courses = defineCollection({
     flyer: z.string().optional(),
     instructor: z.string().optional(),
     order: z.number().int().optional(),
+    code: z.number().int().optional(),
     status: z.enum(["draft", "published", "archived"]),
     isFeatured: z.boolean().default(false),
     whatsappMessage: z.string().optional(),
