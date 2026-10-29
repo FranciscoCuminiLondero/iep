@@ -28,15 +28,15 @@ const titleSize = "text-[clamp(1.375rem,0.75rem+4.5vw,3.5rem)]";
      visual en un <img>, solo para que el cálculo dé igual). Tope de 110vh
      de ancho (~32vh de alto, por la proporción 931x268): en pantallas
      anchas y bajas la imagen no empuja al Hero más allá de una pantalla.
-     Es un collage
-     de retratos en blanco y negro: lleva bloque blanco detrás (portrait)
-     porque el Hero es bordó (BACKLOG.md §3).
+     PNG sin fondo: se ve solo el recorte, directo sobre el bordó.
 
-     En mobile el padding de arriba suma el alto de la barra de navegación
-     fija (SectionIndex.astro), así nunca tapa el logo ni el título. Desde
-     md esa barra pasa a ser una columna lateral y no ocupa el tope. -->
-<Section id={id} variant={variant} nav={nav} class="flex min-h-screen flex-col items-center px-6 pt-[calc(var(--nav-bar-h)+2rem)] text-center md:pt-16">
-	<div class="flex flex-1 flex-col items-center justify-center gap-5 pb-10">
+     El padding de arriba suma el alto de la barra de navegación fija
+     (SectionIndex.astro), así nunca tapa el logo ni el título — en todos
+     los tamaños: mientras se ve el Hero la barra está arriba también en
+     escritorio. Hero no lleva el margen de la columna lateral (railOffset):
+     ocupa todo el ancho. -->
+<Section id={id} variant={variant} nav={nav} railOffset={false} class="flex min-h-screen flex-col items-center px-6 pt-[calc(var(--nav-bar-h)+2rem)] text-center">
+	<div class="flex flex-1 flex-col items-center justify-center gap-4 pb-8">
 		{/* TODO: reemplazar por el logo en SVG o PNG con fondo transparente
 		    cuando lo tengamos (BACKLOG.md D) — hoy solo existe este JPG
 		    cuadrado, que se recorta en círculo con rounded-full + object-cover.
@@ -57,7 +57,6 @@ const titleSize = "text-[clamp(1.375rem,0.75rem+4.5vw,3.5rem)]";
 	<FigureCutout
 		src="/images/hero.png"
 		alt="Collage de escritores y pensadores en blanco y negro"
-		portrait
 		class:list={["font-title w-[min(100%,40ch,110vh)]", titleSize]}
 	/>
 	{next && <NextSectionLink target={next.id} label={next.label} />}

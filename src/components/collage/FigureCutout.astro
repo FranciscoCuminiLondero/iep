@@ -23,19 +23,12 @@ interface Props {
 	 * el overflow-x:hidden global hace el resto.
 	 */
 	class?: string;
-	/**
-	 * Retrato de autor en blanco y negro: lleva siempre un bloque blanco
-	 * detrás (BACKLOG.md §3 — nunca directo sobre bordó). Va siempre, no solo
-	 * en secciones bordó, porque la figura puede cruzar a la sección vecina o
-	 * cambiar de lugar en la alternancia; sobre blanco no se nota.
-	 */
-	portrait?: boolean;
 }
 
-const { src, alt, class: className, portrait = false } = Astro.props;
+const { src, alt, class: className } = Astro.props;
 ---
 
-<img src={src} alt={alt} class:list={["figure-cutout", portrait && "bg-white", className]} />
+<img src={src} alt={alt} class:list={["figure-cutout", className]} />
 
 <style is:global>
 	/*

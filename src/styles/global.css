@@ -54,14 +54,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Desde md el índice de secciones es una columna fija a la izquierda
-   (SectionIndex.astro): se le reserva su ancho para que no tape contenido.
-   En mobile es una barra arriba y no ocupa ancho. */
-@media (min-width: 48rem) {
-  body {
-    padding-left: var(--nav-rail-w);
-  }
-}
 
 /* Accesibilidad — DESIGN.md §5.5. Con reduced motion, todo el contenido
    debe quedar visible y usable sin depender de una animación que lo revele. */

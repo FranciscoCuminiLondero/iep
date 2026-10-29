@@ -19,6 +19,11 @@
 // el tope de la sección al llegar por ancla; ScrollNav.astro lee este valor.
 // tabindex=-1: ScrollNav mueve el foco a la sección al navegar, para que el
 // teclado siga desde ahí.
+//
+// railOffset (default): desde md la sección arranca después de la columna
+// del índice (margin-left, no padding — las figuras absolute se siguen
+// posicionando contra el borde del contenido, como antes). El Hero va sin
+// margen: mientras se ve, el índice está arriba y no ocupa el costado.
 import type { NavTabId } from "../../data/navigation";
 import type { SectionVariant } from "../../lib/sections";
 
@@ -27,10 +32,11 @@ interface Props {
 	variant: SectionVariant;
 	nav?: NavTabId;
 	sticky?: boolean | "lg";
+	railOffset?: boolean;
 	class?: string;
 }
 
-const { id, variant, nav, sticky = true, class: className } = Astro.props;
+const { id, variant, nav, sticky = true, railOffset = true, class: className } = Astro.props;
 ---
 
 <section
@@ -45,6 +51,7 @@ const { id, variant, nav, sticky = true, class: className } = Astro.props;
 		"relative scroll-mt-(--nav-bar-h) outline-none md:scroll-mt-0",
 		sticky === true && "md:sticky md:top-(--sticky-top,0px)",
 		sticky === "lg" && "lg:sticky lg:top-(--sticky-top,0px)",
+		railOffset && "md:ml-(--nav-rail-w)",
 		className,
 	]}
 >

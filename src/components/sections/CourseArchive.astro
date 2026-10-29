@@ -29,12 +29,10 @@ const restCourses = pastCourses.slice(VISIBLE_COUNT);
      JS, accesible por default (teclado, lectores de pantalla). El "ver más"
      de abajo es el mismo patrón, aplicado a la lista entera. -->
 <!-- TODO: sin buscador/filtros hasta que el volumen de cursos lo justifique (BRIEF.md §18). -->
-<!-- Bauman = "personaje-recorte" (FigureCutout), pareja de Freud en About.astro:
-     forman la transición de dos figuras Quiénes somos → Archivo (una a cada
-     lado). Se corta por el borde izquierdo y arranca antes del límite de
-     esta sección (top negativo) para cruzar hacia arriba, sobre "Quiénes
-     somos" — al venir después en el DOM ya pinta encima de la sección
-     anterior, sin necesitar z-index para ESO (eso pasa a nivel de las
+<!-- Bauman = "personaje-recorte" (FigureCutout). Se corta por el borde
+     izquierdo y arranca antes del límite de esta sección (top negativo)
+     para cruzar hacia arriba, sobre la sección anterior (hoy Próximo
+     curso) — al venir después en el DOM ya pinta encima de ella, sin necesitar z-index para ESO (eso pasa a nivel de las
      secciones, afuera del stacking context de #archivo — no depende de lo
      que se explica abajo).
 
@@ -101,7 +99,6 @@ const restCourses = pastCourses.slice(VISIBLE_COUNT);
 	<FigureCutout
 		src="/images/Zygmunt-Bauman.png"
 		alt="Retrato de Zygmunt Bauman"
-		portrait
 		class="absolute -top-8 -left-20 -z-10 h-48 sm:-left-14 sm:h-16 md:-top-16 md:-left-28 md:h-[24vh] lg:h-[36vh]"
 	/>
 	<h2 class="font-title text-[clamp(1.5rem,4.5vw,2.5rem)] font-extrabold text-fg uppercase">
@@ -162,9 +159,11 @@ const restCourses = pastCourses.slice(VISIBLE_COUNT);
 	/* Tipografía del body renderizado desde Markdown (temario + bio del
 	   disertante) — set:html no pasa por el scoping de Astro, por eso va
 	   con is:global apuntando a la clase del wrapper. */
+	/* Colores de la sección (--section-fg, Section.astro): esta lista puede
+	   caer en una sección bordó o blanca según el orden. */
 	.course-details {
 		font-family: var(--font-body);
-		color: var(--ink-70);
+		color: color-mix(in oklab, var(--section-fg) 70%, transparent);
 		font-size: 1rem;
 		line-height: 1.6;
 	}
@@ -172,7 +171,7 @@ const restCourses = pastCourses.slice(VISIBLE_COUNT);
 	.course-details h3 {
 		font-family: var(--font-title);
 		font-weight: 700;
-		color: var(--carbon-black);
+		color: var(--section-fg);
 		margin-top: 1rem;
 	}
 
@@ -195,6 +194,6 @@ const restCourses = pastCourses.slice(VISIBLE_COUNT);
 	}
 
 	.course-details strong {
-		color: var(--carbon-black);
+		color: var(--section-fg);
 	}
 </style>

@@ -83,45 +83,28 @@ const { id, variant, nav, next } = Astro.props;
      sección apila texto + feed en columna y termina midiendo 1139px
      contra ~842px de viewport (medido); con sticky, buena parte del
      contenido (los links de prensa, el feed) no se vuelve alcanzable
-     hasta un tramo de scroll enorme, para cuando Archivo ya la tapó.
-
-     Bloque blanco detrás de los cuatro Freud (BACKLOG.md §3: los retratos
-     en blanco y negro nunca van directo sobre bordó). Un solo bloque para
-     los cuatro, no uno por figura: cada imagen es un cuadrado y un fondo
-     propio taparía a las de atrás, rompiendo la escalera. Las posiciones
-     visibles son las mismas de antes — el bloque arranca en la esquina del
-     Freud de más atrás (-right-8 bottom-2) y los demás llevan el mismo
-     corrimiento, en coordenadas del bloque. El de atrás va en flujo y le da
-     tamaño al bloque (pt-6/pr-6 = los 24px de escalera). z-10 en el bloque:
-     arriba del feed, como antes cada Freud.
-
-     Desde md bajan de 64vh a 28vh/32vh: con el bloque blanco detrás, a 64vh
-     tapaban el párrafo, la declaración y casi todo el feed (antes el PNG
-     transparente dejaba ver entre las figuras). Misma esquina, más chicos:
-     así el bloque solo pisa la esquina del feed, nunca el texto. -->
+     hasta un tramo de scroll enorme, para cuando Archivo ya la tapó. -->
 <Section id={id} variant={variant} nav={nav} class="isolate flex min-h-screen flex-col items-center justify-center gap-10 px-6 py-24 text-center md:flex-row md:gap-16 md:text-left">
-	<div class="absolute -right-8 bottom-2 z-10 bg-white pt-6 pr-6">
-		<FigureCutout
-			src="/images/Freud.png"
-			alt="Retrato de Sigmund Freud"
-			class="absolute right-0 bottom-6 z-40 h-56 sm:h-20 md:h-[28vh] lg:h-[32vh]"
-		/>
-		<FigureCutout
-			src="/images/Freud.png"
-			alt="Retrato de Sigmund Freud"
-			class="absolute right-2 bottom-4 z-30 h-56 sm:h-20 md:h-[28vh] lg:h-[32vh]"
-		/>
-		<FigureCutout
-			src="/images/Freud.png"
-			alt="Retrato de Sigmund Freud"
-			class="absolute right-4 bottom-2 z-20 h-56 sm:h-20 md:h-[28vh] lg:h-[32vh]"
-		/>
-		<FigureCutout
-			src="/images/Freud.png"
-			alt="Retrato de Sigmund Freud"
-			class="relative z-10 h-56 sm:h-20 md:h-[28vh] lg:h-[32vh]"
-		/>
-	</div>
+	<FigureCutout
+		src="/images/Freud.png"
+		alt="Retrato de Sigmund Freud"
+		class="absolute -right-8 bottom-8 z-40 h-56 sm:h-20 md:h-[64vh]"
+	/>
+	<FigureCutout
+		src="/images/Freud.png"
+		alt="Retrato de Sigmund Freud"
+		class="absolute -right-6 bottom-6 z-30 h-56 sm:h-20 md:h-[64vh]"
+	/>
+	<FigureCutout
+		src="/images/Freud.png"
+		alt="Retrato de Sigmund Freud"
+		class="absolute -right-4 bottom-4 z-20 h-56 sm:h-20 md:h-[64vh]"
+	/>
+	<FigureCutout
+		src="/images/Freud.png"
+		alt="Retrato de Sigmund Freud"
+		class="absolute -right-2 bottom-2 z-10 h-56 sm:h-20 md:h-[64vh]"
+	/>
 
 	<div class="flex max-w-md flex-col items-center gap-4 md:items-start">
 		<h2 class="font-title text-[clamp(1.5rem,4.5vw,2.5rem)] font-extrabold text-fg uppercase">

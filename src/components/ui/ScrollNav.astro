@@ -20,6 +20,11 @@
 // scroll-behavior:smooth nativo por una animación con la curva y duración de
 // marca (--ease-editorial, --duration-slow en tokens.css). Sin animación si
 // el usuario tiene prefers-reduced-motion.
+//
+// Avisa el inicio y el fin de cada navegación con los eventos
+// "section-nav:start" (detail: la sección de destino) y "section-nav:end":
+// SectionIndex.astro fija la pestaña de destino mientras dura el scroll, en
+// vez de ir resaltando cada sección intermedia que pasa (el parpadeo).
 ---
 
 <script>
@@ -34,13 +39,18 @@
 		return 3 * u * u * t * 0.22 + 3 * u * t * t * 0.36 + t * t * t;
 	}
 
-	function animatedScrollTo(targetY: number) {
+	let activeAnimation = 0;
+
+	function animatedScrollTo(targetY: number, onDone: () => void) {
+		const animation = ++activeAnimation;
 		const startY = window.scrollY;
 		const diff = targetY - startY;
-		if (Math.abs(diff) < 1) return;
 
-		if (prefersReducedMotion.matches) {
+		if (Math.abs(diff) < 1 || prefersReducedMotion.matches) {
 			window.scrollTo({ top: targetY, left: 0, behavior: "instant" });
+			// Un frame después: deja que los IntersectionObserver vean la
+			// posición final antes de soltar la pestaña fijada.
+			requestAnimationFrame(() => requestAnimationFrame(onDone));
 			return;
 		}
 
@@ -48,9 +58,12 @@
 		const start = performance.now();
 
 		function step(now: number) {
+			// Otro click arrancó una navegación nueva: esta se abandona.
+			if (animation !== activeAnimation) return;
 			const t = Math.min((now - start) / duration, 1);
 			window.scrollTo({ top: startY + diff * easeEditorial(t), left: 0, behavior: "instant" });
 			if (t < 1) requestAnimationFrame(step);
+			else requestAnimationFrame(() => requestAnimationFrame(onDone));
 		}
 		requestAnimationFrame(step);
 	}
@@ -72,7 +85,11 @@
 		const sectionTop = marker?.hasAttribute("data-section-sentinel") ? marker.getBoundingClientRect().bottom + window.scrollY : 0;
 		const offset = parseFloat(getComputedStyle(section).scrollMarginTop) || 0;
 
-		animatedScrollTo(Math.max(0, sectionTop - offset));
+		document.dispatchEvent(new CustomEvent("section-nav:start", { detail: section }));
+		const animation = activeAnimation + 1;
+		animatedScrollTo(Math.max(0, sectionTop - offset), () => {
+			if (animation === activeAnimation) document.dispatchEvent(new CustomEvent("section-nav:end"));
+		});
 		history.pushState(null, "", `#${id}`);
 		// Para teclado y lectores de pantalla: el foco sigue desde la sección
 		// de destino, como haría un ancla nativa.

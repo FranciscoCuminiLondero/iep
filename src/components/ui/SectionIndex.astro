@@ -1,14 +1,15 @@
 ---
 // Índice de secciones (BACKLOG.md §8-9): 3 pestañas rectangulares, fondo
-// bordó, texto blanco. Un solo <nav> con dos formatos:
-//   - ≥768px: columna fija a la izquierda, a toda altura. Ocupa su propio
-//     ancho (global.css le reserva --nav-rail-w con padding-left en body),
-//     así nunca tapa contenido.
-//   - <768px: barra fija arriba, de alto --nav-bar-h, para no sacarle ancho
-//     al contenido. El Hero suma ese alto a su padding de arriba y las
-//     secciones lo usan de scroll-margin-top (Section.astro).
-// Siempre visible, también sobre el Hero (reemplaza al menú hamburguesa
-// mobile y al índice flotante anterior, que se ocultaban en el Hero).
+// bordó, texto blanco. Un solo <nav> con dos formatos (data-mode):
+//   - "top": barra fija arriba, de alto --nav-bar-h. Es el formato de
+//     mobile siempre, y el de escritorio mientras se ve el Hero.
+//   - "side" (solo desde md): columna fija a la izquierda, a toda altura,
+//     una vez que se baja del Hero. Las secciones y el footer le reservan
+//     su ancho con margin-left (Section.astro), así nunca tapa contenido;
+//     el Hero no, porque mientras se ve el índice está arriba.
+// El cambio de formato usa el mismo sentinel #hero-end que el logo de
+// Header.astro (ver ahí por qué no #hero): pasa a "side" cuando el
+// sentinel cruza la mitad de la pantalla hacia arriba.
 //
 // La pestaña de la sección que se está viendo lleva aria-current (ver
 // script). La navegación por click la resuelve ScrollNav.astro.
@@ -17,17 +18,18 @@ import { navTabs } from "../../data/navigation";
 
 <nav
 	id="section-index"
+	data-mode="top"
 	aria-label="Secciones de la página"
-	class="fixed inset-x-0 top-0 z-30 h-(--nav-bar-h) border-b border-white/20 bg-bitter-chocolate md:inset-x-auto md:bottom-0 md:left-0 md:h-auto md:w-(--nav-rail-w) md:border-r md:border-b-0"
+	class="group fixed inset-x-0 top-0 z-30 h-(--nav-bar-h) bg-bitter-chocolate md:data-[mode=side]:right-auto md:data-[mode=side]:bottom-0 md:data-[mode=side]:h-auto md:data-[mode=side]:w-(--nav-rail-w)"
 >
-	<ul class="flex h-full md:flex-col md:justify-center md:gap-1 md:px-3">
+	<ul class="flex h-full md:justify-center md:gap-2 md:group-data-[mode=side]:flex-col md:group-data-[mode=side]:gap-1 md:group-data-[mode=side]:px-3">
 		{
 			navTabs.map((tab) => (
 				<li class="flex flex-1 md:flex-none">
 					<a
 						href={`#${tab.id}`}
 						data-tab={tab.id}
-						class="font-body flex w-full items-center justify-center px-2 text-center text-[clamp(0.6875rem,3.2vw,0.875rem)] leading-tight font-bold tracking-[0.04em] text-white uppercase transition-colors outline-current hover:bg-white/10 focus-visible:outline-2 focus-visible:-outline-offset-4 aria-[current=location]:bg-white aria-[current=location]:text-bitter-chocolate md:justify-start md:px-4 md:py-4 md:text-left md:text-base"
+						class="font-body flex w-full items-center justify-center px-2 text-center text-[clamp(0.6875rem,3.2vw,0.875rem)] leading-tight font-bold tracking-[0.04em] text-white uppercase transition-colors outline-current hover:bg-white/10 focus-visible:outline-2 focus-visible:-outline-offset-4 aria-[current=location]:bg-white aria-[current=location]:text-bitter-chocolate md:px-6 md:text-sm md:group-data-[mode=side]:justify-start md:group-data-[mode=side]:px-4 md:group-data-[mode=side]:py-4 md:group-data-[mode=side]:text-left md:group-data-[mode=side]:text-base"
 					>
 						{tab.label}
 					</a>
@@ -37,7 +39,59 @@ import { navTabs } from "../../data/navigation";
 	</ul>
 </nav>
 
+<style>
+	/* Entrada al cambiar de formato (solo desde md, donde hay dos formatos):
+	   la columna entra desde la izquierda y la barra desde arriba. Dos
+	   animaciones con nombre distinto para que el navegador la reinicie en
+	   cada cambio. data-switched evita animar la barra en la carga inicial.
+	   Con prefers-reduced-motion la regla global de global.css la deja en
+	   ~0ms: cambia directo. */
+	@media (min-width: 48rem) {
+		#section-index[data-switched][data-mode="side"] {
+			animation: nav-enter-side var(--duration-base) var(--ease-editorial);
+		}
+
+		#section-index[data-switched][data-mode="top"] {
+			animation: nav-enter-top var(--duration-base) var(--ease-editorial);
+		}
+	}
+
+	@keyframes nav-enter-side {
+		from {
+			opacity: 0;
+			transform: translateX(-100%);
+		}
+	}
+
+	@keyframes nav-enter-top {
+		from {
+			opacity: 0;
+			transform: translateY(-100%);
+		}
+	}
+</style>
+
 <script>
+	const nav = document.getElementById("section-index");
+
+	// Formato: arriba mientras el sentinel del Hero no cruzó la mitad de la
+	// pantalla hacia arriba (también cuando todavía está debajo del
+	// viewport, donde isIntersecting da false igual que cuando ya pasó).
+	const heroEnd = document.getElementById("hero-end");
+
+	if (nav && heroEnd) {
+		new IntersectionObserver(
+			([entry]) => {
+				const onHero = entry.boundingClientRect.top >= (entry.rootBounds?.top ?? window.innerHeight / 2);
+				const mode = onHero ? "top" : "side";
+				if (nav.dataset.mode === mode) return;
+				nav.dataset.mode = mode;
+				nav.dataset.switched = "";
+			},
+			{ threshold: 0, rootMargin: "-50% 0px 0px 0px" },
+		).observe(heroEnd);
+	}
+
 	// Resalta la pestaña de la sección que se está viendo. Cada sección
 	// arranca justo después del sentinel de la anterior (index.astro); se
 	// observan esos sentinels y no las secciones, porque desde md las
@@ -49,7 +103,6 @@ import { navTabs } from "../../data/navigation";
 	// de esa línea — o sea, mientras su sección ya empezó. Cubrir todo lo de
 	// arriba (no solo una franja) hace que un salto largo de scroll también
 	// dispare el cambio. La sección actual es la última que ya empezó.
-	const nav = document.getElementById("section-index");
 	const links = nav ? [...nav.querySelectorAll<HTMLAnchorElement>("a[data-tab]")] : [];
 	const sections = [...document.querySelectorAll<HTMLElement>("[data-section]")];
 
@@ -62,8 +115,13 @@ import { navTabs } from "../../data/navigation";
 			if (marker?.hasAttribute("data-section-sentinel")) sectionByMarker.set(marker, section);
 		}
 
+		// Mientras ScrollNav anima una navegación, la pestaña queda fija en la
+		// de destino (ver "section-nav:start" en ScrollNav.astro): si no, se
+		// iría resaltando cada sección intermedia que pasa el scroll.
+		let lockedSection: HTMLElement | null = null;
+
 		const updateActive = () => {
-			const current = sections.findLast((section) => started.has(section));
+			const current = lockedSection ?? sections.findLast((section) => started.has(section));
 			const tab = current?.dataset.nav;
 			for (const link of links) {
 				if (tab && link.dataset.tab === tab) link.setAttribute("aria-current", "location");
@@ -86,5 +144,14 @@ import { navTabs } from "../../data/navigation";
 
 		sectionByMarker.forEach((_, marker) => observer.observe(marker));
 		updateActive();
+
+		document.addEventListener("section-nav:start", (event) => {
+			lockedSection = (event as CustomEvent<HTMLElement>).detail;
+			updateActive();
+		});
+		document.addEventListener("section-nav:end", () => {
+			lockedSection = null;
+			updateActive();
+		});
 	}
 </script>

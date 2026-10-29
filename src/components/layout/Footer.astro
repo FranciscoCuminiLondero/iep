@@ -11,7 +11,7 @@ const navLinks = [{ label: "Inicio", href: "#hero" }, ...navTabs.map((tab) => ({
      contenido. Sin CTA de WhatsApp: el de Pantu, arriba, ya cumple esa
      función (BRIEF.md §23 — evitar que el botón verde/CTA se repita como si
      fuera el color dominante). Solo logo + navegación + contacto. -->
-<footer id="contacto" class="flex flex-col items-center gap-6 bg-bitter-chocolate px-6 py-12 text-center">
+<footer id="contacto" class="flex flex-col items-center gap-6 bg-bitter-chocolate px-6 py-12 text-center md:ml-(--nav-rail-w)">
 	<a href="#hero" aria-label={`Volver arriba — ${site.name}`}>
 		<img src="/images/logo-iep.jpg" alt={site.name} class="h-10 w-10 rounded-sm" />
 	</a>
