@@ -7,7 +7,7 @@ import NextSectionLink from "../ui/NextSectionLink.astro";
 import { MessageCircle } from "lucide-astro";
 import type { SectionProps } from "../../lib/sections";
 import Section from "../layout/Section.astro";
-import { whatsappUrl } from "../../lib/whatsapp/messages";
+import { courseSignupMessage, whatsappUrl } from "../../lib/whatsapp/messages";
 
 type Props = SectionProps;
 
@@ -17,7 +17,7 @@ const course = await courseRepository.getUpcoming();
 
 const whatsappHref =
 	course && site.whatsappPhone
-		? whatsappUrl(course.whatsappMessage ?? `Hola, quería consultar por el curso "${course.title}".`)
+		? whatsappUrl(course.whatsappMessage ?? courseSignupMessage(course))
 		: undefined;
 ---
 
@@ -86,7 +86,7 @@ const whatsappHref =
 						{/* MessageCircle, no el logo de WhatsApp: ver comentario del mismo
 						    ícono en PantuCTA.astro — Lucide no trae logos de marca. */}
 						<MessageCircle class="h-4 w-4" aria-hidden="true" />
-						Consultar por WhatsApp
+						Quiero anotarme
 					</a>
 
 					{course.image && (
@@ -126,7 +126,7 @@ const whatsappHref =
 						Nuevos cursos en 2027
 					</h2>
 					<p class="font-body text-base text-fg/70">Mientras tanto, podés recorrer los cursos ya dictados.</p>
-					<a href="#archivo" class="font-body text-sm font-bold text-accent underline underline-offset-2">Ver cursos dictados</a>
+					<a href="#nuestros-cursos" class="font-body text-sm font-bold text-accent underline underline-offset-2">Ver cursos dictados</a>
 				</div>
 			</>
 		)

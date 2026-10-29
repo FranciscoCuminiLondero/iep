@@ -27,6 +27,8 @@ export interface Course {
   /** Flyer/afiche completo del curso (estilo post de Instagram), opcional.
    *  Se detecta solo en public/images/cursos/<slug> (lib/courses/images.ts). */
   flyer?: string;
+  /** Proporción del flyer (alto / ancho), para animar la miniatura hacia él. */
+  flyerAspect?: number;
   /** Recorte central del flyer para la miniatura circular (BACKLOG.md §12).
    *  Se detecta solo en public/images/cursos/<slug>-circulo. */
   thumbnail?: string;

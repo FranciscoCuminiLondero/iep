@@ -6,6 +6,7 @@ import { findCourseImage } from "./images";
 
 function toCourse(entry: CollectionEntry<"courses">): Course {
   const { data } = entry;
+  const flyer = findCourseImage(entry.id);
   return {
     id: entry.id,
     slug: entry.id,
@@ -17,8 +18,11 @@ function toCourse(entry: CollectionEntry<"courses">): Course {
     year: data.year,
     modality: data.modality,
     image: data.image,
-    flyer: data.flyer ?? findCourseImage(entry.id),
-    thumbnail: findCourseImage(`${entry.id}-circulo`),
+    flyer: data.flyer ?? flyer?.src,
+    // Proporción solo para el archivo detectado; un `flyer` explícito en el
+    // .md no la trae y la UI usa una por defecto.
+    flyerAspect: !data.flyer && flyer ? flyer.height / flyer.width : undefined,
+    thumbnail: findCourseImage(`${entry.id}-circulo`)?.src,
     code: data.code,
     instructor: data.instructor,
     order: data.order,

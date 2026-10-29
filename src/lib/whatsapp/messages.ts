@@ -6,6 +6,11 @@ export function whatsappUrl(text: string): string {
 	return `https://wa.me/${site.whatsappPhone}?text=${encodeURIComponent(text)}`;
 }
 
+/** Inscripción al curso con inscripciones abiertas (BACKLOG.md §13). */
+export function courseSignupMessage(course: { title: string }): string {
+	return `Hola! Quiero anotarme al curso de "${course.title}".`;
+}
+
 /**
  * Pedido de información de un curso dictado: el código del curso (el número
  * de nodo del bot, 21–31) seguido del nombre, ej. "23 Introducción a la

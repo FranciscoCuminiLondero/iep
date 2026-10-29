@@ -1,52 +1,222 @@
 ---
-// Fila de curso del Archivo — <details> nativo: sin JS sigue abriendo y
-// cerrando, accesible por teclado y lectores de pantalla por default. El
-// script de abajo solo le suma la animación y el reacomodo del scroll.
+// Fila de curso de "Nuestros cursos" (BACKLOG.md §12) — <details> nativo:
+// sin JS sigue abriendo y cerrando, accesible por teclado y lectores de
+// pantalla por default. El script de abajo le suma la animación y el
+// reacomodo del scroll.
 //
-// Al abrir: flyer (si existe el archivo, ver lib/courses/images.ts), temario
-// y CV, y el botón a WhatsApp con el código del curso para que Pantu
-// responda directo con su ficha (lib/whatsapp/messages.ts). El botón va
-// fuera del <summary> para que tocarlo no cierre la fila.
-import { ChevronDown, MessageCircle } from "lucide-astro";
+// Cerrada: miniatura circular + título + disertante + botón "+".
+// Abierta: la miniatura crece hasta el flyer completo (sin recorte) y abajo
+// aparecen temario, CV y el botón a WhatsApp.
+//
+// Miniatura: el recorte <slug>-circulo si existe; si no, el centro del
+// flyer (object-cover); si no hay flyer, las iniciales del curso en un
+// círculo. Las imágenes se detectan solas (lib/courses/images.ts).
+//
+// CTA: el curso con inscripciones abiertas (signupOpen) lleva su tag y
+// "Quiero anotarme"; los dictados, "Pedir información" con el código del
+// bot (lib/whatsapp/messages.ts).
+import { MessageCircle, Minus, Plus } from "lucide-astro";
 import type { Course } from "../../types/course";
-import { courseInfoMessage, whatsappUrl } from "../../lib/whatsapp/messages";
+import { courseInfoMessage, courseSignupMessage, whatsappUrl } from "../../lib/whatsapp/messages";
 
 interface Props {
 	course: Course;
+	/** Curso con inscripciones abiertas: tag + "Quiero anotarme". */
+	signupOpen?: boolean;
 }
 
-const { course } = Astro.props;
+const { course, signupOpen = false } = Astro.props;
+
+const cta = signupOpen
+	? { label: "Quiero anotarme", href: whatsappUrl(course.whatsappMessage ?? courseSignupMessage(course)) }
+	: { label: "Pedir información", href: whatsappUrl(courseInfoMessage(course)) };
+
+// Iniciales de las dos primeras palabras con peso (se saltean "a", "la",
+// "en"...), para cuando todavía no hay flyer.
+const initials = course.title
+	.split(/[\s:,-]+/)
+	.filter((word) => word.length > 3)
+	.slice(0, 2)
+	.map((word) => word[0].toUpperCase())
+	.join("");
+
+// Proporción del flyer abierto: la real del archivo, o 5:4 (alto:ancho, la
+// de los flyers de Instagram) si vino como ruta explícita en el .md.
+const flyerAspect = course.flyerAspect ?? 1.25;
 ---
 
 <li class="border-b border-fg/15">
-	<details data-accordion class="group py-4">
-		<summary class="flex cursor-pointer list-none items-start justify-between gap-4">
-			<span class="font-body text-fg">
+	<details data-accordion class="course-item group py-4">
+		<summary class:list={["course-summary cursor-pointer list-none", course.flyer && "course-summary--flyer"]}>
+			<span
+				class:list={["course-thumb", course.flyer && "course-thumb--flyer"]}
+				style={`--flyer-aspect: ${flyerAspect};`}
+				aria-hidden="true"
+			>
+				{
+					course.flyer ? (
+						<>
+							<img src={course.flyer} alt="" loading="lazy" class="course-thumb__img" />
+							{course.thumbnail && <img src={course.thumbnail} alt="" loading="lazy" class="course-thumb__img course-thumb__crop" />}
+						</>
+					) : (
+						<span class="font-title text-sm font-black">{initials}</span>
+					)
+				}
+			</span>
+			<span class="course-summary__text font-body min-w-0 text-fg">
+				{
+					signupOpen && (
+						<span class="mb-1 block text-xs font-bold tracking-[0.1em] text-accent uppercase">
+							Inscripciones abiertas{course.date && ` - ${course.date}`}
+						</span>
+					)
+				}
 				<span class="block font-bold">{course.title}</span>
 				{course.instructor && <span class="mt-1 block text-sm text-fg/70">{course.instructor}</span>}
 			</span>
-			<ChevronDown class="mt-1 h-5 w-5 shrink-0 text-fg/70 transition-transform duration-300 group-open:rotate-180" aria-hidden="true" />
+			{/* Círculo con "+" / "–" (BACKLOG.md §4), colores invertidos de la
+			    sección: blanco sobre bordó, negro sobre blanco. */}
+			<span class="course-toggle course-summary__toggle mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-fg text-(--section-bg)" aria-hidden="true">
+				<Plus class="course-toggle__plus h-4 w-4" />
+				<Minus class="course-toggle__minus h-4 w-4" />
+			</span>
 		</summary>
 		<div data-accordion-content class="overflow-hidden">
-			{course.flyer && <img src={course.flyer} alt={`Flyer del curso "${course.title}"`} loading="lazy" class="mt-4 w-full max-w-xs" />}
 			{course.detailsHtml && <div class="course-details mt-4" set:html={course.detailsHtml} />}
-			{/* Colores invertidos de la sección: blanco con texto bordó sobre
-			    bordó, negro con texto blanco sobre blanco. */}
 			<a
-				href={whatsappUrl(courseInfoMessage(course))}
+				href={cta.href}
 				target="_blank"
 				rel="noopener"
 				class="font-body mt-5 mb-1 inline-flex items-center gap-2 rounded-full bg-fg px-5 py-2.5 text-sm font-bold text-(--section-bg)"
 			>
 				<MessageCircle class="h-4 w-4" aria-hidden="true" />
-				Pedir información
+				{cta.label}
 			</a>
 		</div>
 	</details>
 </li>
 
+<style is:global>
+	/*
+	  Estado "expandido": con JS lo marca el script (data-expanded) al empezar
+	  a abrir o a cerrar, así la miniatura se anima en paralelo con el alto
+	  del contenido. Sin JS, alcanza con [open].
+	*/
+	.course-thumb {
+		position: relative;
+		display: flex;
+		flex-shrink: 0;
+		align-items: center;
+		justify-content: center;
+		width: 4rem;
+		height: 4rem;
+		overflow: hidden;
+		border-radius: 50%;
+		background-color: color-mix(in oklab, var(--section-fg) 12%, transparent);
+		color: var(--section-fg);
+		transition:
+			width var(--duration-base) var(--ease-editorial),
+			height var(--duration-base) var(--ease-editorial),
+			border-radius var(--duration-base) var(--ease-editorial);
+	}
+
+	.course-thumb__img {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: opacity var(--duration-base) var(--ease-editorial);
+	}
+
+	/* Fila: miniatura | título y disertante | "+". Con flyer, al abrir el
+	   texto pasa debajo del flyer (que ocupa el ancho de la izquierda). El
+	   cambio de lugar es instantáneo (grid no se interpola), así que el
+	   texto entra con un fundido corto. */
+	.course-summary {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		grid-template-areas: "thumb text toggle";
+		align-items: start;
+		column-gap: 1rem;
+	}
+
+	.course-summary > .course-thumb {
+		grid-area: thumb;
+	}
+
+	.course-summary__text {
+		grid-area: text;
+	}
+
+	.course-summary__toggle {
+		grid-area: toggle;
+	}
+
+	.course-item:is([data-expanded="true"], [open]:not([data-expanded])) .course-summary--flyer {
+		grid-template-areas:
+			"thumb . toggle"
+			"text text text";
+		row-gap: 0.75rem;
+	}
+
+	.course-item:is([data-expanded="true"], [open]:not([data-expanded])) .course-summary--flyer .course-summary__text {
+		animation: course-text-in var(--duration-base) var(--ease-editorial);
+	}
+
+	.course-item[data-expanded="false"] .course-summary--flyer .course-summary__text {
+		animation: course-text-back var(--duration-base) var(--ease-editorial);
+	}
+
+	/* Dos nombres para que el navegador reinicie la animación en cada
+	   cambio de estado. */
+	@keyframes course-text-in {
+		from {
+			opacity: 0;
+		}
+	}
+
+	@keyframes course-text-back {
+		from {
+			opacity: 0;
+		}
+	}
+
+	/* Abierto: el flyer completo, a su proporción real (cover sobre una caja
+	   con la misma proporción = imagen entera, sin recorte), con bordes
+	   apenas redondeados. Los círculos y este redondeo son solo para estas
+	   miniaturas; no contradicen la regla de "sin bordes redondeados" del
+	   collage (BACKLOG.md C). Si se cambia --open-width, actualizar
+	   OPEN_WIDTH en el script de abajo. */
+	.course-item:is([data-expanded="true"], [open]:not([data-expanded])) .course-thumb--flyer {
+		--open-width: min(20rem, 70vw);
+		width: var(--open-width);
+		height: calc(var(--open-width) * var(--flyer-aspect));
+		border-radius: 0.5rem;
+	}
+
+	/* El recorte -circulo se desvanece y deja ver el flyer completo. */
+	.course-item:is([data-expanded="true"], [open]:not([data-expanded])) .course-thumb__crop {
+		opacity: 0;
+	}
+
+	.course-toggle__minus {
+		display: none;
+	}
+
+	.course-item:is([data-expanded="true"], [open]:not([data-expanded])) .course-toggle__plus {
+		display: none;
+	}
+
+	.course-item:is([data-expanded="true"], [open]:not([data-expanded])) .course-toggle__minus {
+		display: block;
+	}
+</style>
+
 <script>
-	// Apertura y cierre animados (alto + opacidad, --ease-editorial):
+	// Apertura y cierre animados (alto + opacidad, --ease-editorial). La
+	// miniatura acompaña por CSS (data-expanded, ver estilos).
 	// - Al abrir, el scroll lleva la fila arriba de la pantalla, para que se
 	//   vea el inicio de la descripción.
 	// - Al cerrar, si la fila quedó por encima de la pantalla (la
@@ -57,12 +227,20 @@ const { course } = Astro.props;
 	const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 	const DURATION = 400; // --duration-base, tokens.css
 	const EASING = "cubic-bezier(0.22, 1, 0.36, 1)"; // --ease-editorial
-	const GAP = 16; // aire entre el tope de la pantalla (o la barra) y la fila
+	// Aire entre el tope de la pantalla (o la barra mobile) y la fila. Desde
+	// md es mayor: ahí el logo flotante de Header.astro ocupa el tope
+	// (top 16px + 40px de alto) y taparía el título de la fila.
+	const gap = () => (window.matchMedia("(min-width: 48rem)").matches ? 72 : 16);
+	// Mismo valor que --open-width en los estilos: min(20rem, 70vw).
+	const OPEN_WIDTH = () => Math.min(320, window.innerWidth * 0.7);
 
 	for (const details of document.querySelectorAll<HTMLDetailsElement>("details[data-accordion]")) {
 		const summary = details.querySelector("summary");
 		const content = details.querySelector<HTMLElement>("[data-accordion-content]");
+		const thumb = details.querySelector<HTMLElement>(".course-thumb");
 		if (!summary || !content) continue;
+
+		details.dataset.expanded = String(details.open);
 
 		let animation: Animation | null = null;
 		let closing = false;
@@ -81,20 +259,32 @@ const { course } = Astro.props;
 
 		const open = () => {
 			const from = animation ? content.getBoundingClientRect().height : 0;
+			const thumbBefore = thumb?.offsetHeight ?? 0;
+			const summaryBefore = summary.offsetHeight;
 			closing = false;
 			details.open = true;
+			details.dataset.expanded = "true";
 			const to = content.scrollHeight;
 			if (!prefersReducedMotion.matches) animateHeight(from, to);
-			smoothScrollTo(scrollTargetFor(details, GAP, to - from));
+			// La fila también crece: el texto ya pasó debajo (summary lo mide)
+			// y la miniatura va a crecer hasta el flyer. Se suma al alto final
+			// para calcular bien hasta dónde puede subir. El alto del flyer se
+			// calcula con la fórmula del CSS (--open-width) porque la
+			// transición todavía no arrancó.
+			const aspect = thumb?.classList.contains("course-thumb--flyer") ? parseFloat(thumb.style.getPropertyValue("--flyer-aspect")) : 0;
+			const thumbGrowth = aspect ? Math.max(0, OPEN_WIDTH() * aspect - thumbBefore) : 0;
+			const rowGrowth = summary.offsetHeight - summaryBefore + thumbGrowth;
+			smoothScrollTo(scrollTargetFor(details, gap(), to - from + rowGrowth));
 		};
 
 		const close = () => {
 			const finish = () => {
 				closing = false;
 				details.open = false;
-				if (details.getBoundingClientRect().top < topOffsetFor(details)) smoothScrollTo(scrollTargetFor(details, GAP));
+				if (details.getBoundingClientRect().top < topOffsetFor(details)) smoothScrollTo(scrollTargetFor(details, gap()));
 			};
 			closing = true;
+			details.dataset.expanded = "false";
 			if (prefersReducedMotion.matches) finish();
 			else animateHeight(content.getBoundingClientRect().height, 0, finish);
 		};

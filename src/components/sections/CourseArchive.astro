@@ -3,7 +3,6 @@ import { courseRepository } from "../../lib/courses/local.repository";
 import FigureCutout from "../collage/FigureCutout.astro";
 import NextSectionLink from "../ui/NextSectionLink.astro";
 import CourseAccordionItem from "../course/CourseAccordionItem.astro";
-import { ChevronDown } from "lucide-astro";
 import type { SectionProps } from "../../lib/sections";
 import Section from "../layout/Section.astro";
 
@@ -11,23 +10,16 @@ type Props = SectionProps;
 
 const { id, variant, nav, next } = Astro.props;
 
+// El curso con inscripciones abiertas (si hay) encabeza la lista con su tag
+// (BACKLOG.md §11); después, los dictados en el orden del bot.
+const upcoming = await courseRepository.getUpcoming();
 const pastCourses = await courseRepository.getPast();
-
-// Cada sección ocupa la pantalla completa (min-h-screen) — con más cursos de
-// los que entran en un viewport típico, el resto queda detrás de un "ver
-// más" en vez de estirar la sección sin límite. VISIBLE_COUNT es una
-// heurística (~lo que entra en una laptop común), no una regla exacta.
-const VISIBLE_COUNT = 6;
-const visibleCourses = pastCourses.slice(0, VISIBLE_COUNT);
-const restCourses = pastCourses.slice(VISIBLE_COUNT);
 ---
 
-<!-- BRIEF.md §04/§17 — Archivo de cursos (DESIGN.md §6.4). La mayoría de estos
-     cursos están "todavía activos" (sin fecha puntual, ver Course.order), así
-     que ya no se agrupan por año — lista plana, en el orden dado. Cada fila
-     es un <details> nativo (CourseAccordionItem): desplegable al tocar, sin
-     JS, accesible por default (teclado, lectores de pantalla). El "ver más"
-     de abajo es el mismo patrón, aplicado a la lista entera. -->
+<!-- BRIEF.md §04/§17 — Nuestros cursos (ex "Archivo de cursos", BACKLOG.md
+     §10-12). Lista compacta, todos los cursos visibles a la vez (sin "ver
+     más"): de un vistazo se ven título y disertante de cada uno, y el
+     detalle se abre con "+" (CourseAccordionItem). -->
 <!-- TODO: sin buscador/filtros hasta que el volumen de cursos lo justifique (BRIEF.md §18). -->
 <!-- Bauman = "personaje-recorte" (FigureCutout). Se corta por el borde
      izquierdo y arranca antes del límite de esta sección (top negativo)
@@ -81,10 +73,9 @@ const restCourses = pastCourses.slice(VISIBLE_COUNT);
      scrollea internamente — lo que no entra en esa pantalla queda
      inalcanzable hasta que la tapa Pantu:
      1. SOLO desde md — ver comentario en Hero.astro: en mobile, incluso
-        colapsada (VISIBLE_COUNT=6 + encabezado) esta sección mide 918px
-        contra ~842px de viewport (medido) — ya se pasa de una pantalla
-        antes de tocar nada.
-     2. Si se abre "ver más" o el temario de un curso y la sección supera
+        con todos los cursos cerrados esta sección ya supera el alto de una
+        pantalla.
+     2. Si se abre un curso (o ya con la lista completa) y la sección supera
         el alto de pantalla, Section.astro le da un top negativo: se pega
         recién al llegar a su borde inferior, así todo queda alcanzable.
         (Antes una regla :has() apagaba el sticky con algo abierto, pero
@@ -102,38 +93,14 @@ const restCourses = pastCourses.slice(VISIBLE_COUNT);
 		class="absolute -top-8 -left-20 -z-10 h-48 sm:-left-14 sm:h-16 md:-top-16 md:-left-28 md:h-[24vh] lg:h-[36vh]"
 	/>
 	<h2 class="font-title text-[clamp(1.5rem,4.5vw,2.5rem)] font-extrabold text-fg uppercase">
-		Archivo de cursos
+		Nuestros cursos
 	</h2>
 	<p class="font-body -mt-6 max-w-[50ch] text-sm text-fg/70">
 		Todos estos cursos siguen disponibles — podés pedirlos por WhatsApp para hacerlos cuando quieras.
 	</p>
 	<ul class="flex w-full max-w-2xl flex-col">
-		{visibleCourses.map((course) => <CourseAccordionItem course={course} />)}
-		{
-			restCourses.length > 0 && (
-				<li>
-					{/* <summary> tiene que ser el primer hijo en el DOM — si no, el
-					    navegador deja de reconocerlo como el control del <details> y
-					    genera uno propio. El reordenamiento visual (resumen abajo,
-					    debajo de las filas que revela) es solo con flex + order,
-					    nunca tocando el orden real del markup. */}
-					<details class="group flex flex-col py-4">
-						<summary class="order-2 mt-4 flex cursor-pointer list-none items-center justify-center gap-2 text-center">
-							{/* Dos textos, uno tapa al otro según el estado — sin JS,
-							    con group-open (el group es el propio <details>). */}
-							<span class="font-body text-sm font-bold text-accent group-open:hidden">Ver {restCourses.length} cursos más</span>
-							<span class="font-body hidden text-sm font-bold text-accent group-open:inline">Ocultar {restCourses.length} cursos</span>
-							<ChevronDown class="h-4 w-4 text-accent transition-transform group-open:rotate-180" aria-hidden="true" />
-						</summary>
-						<ul class="order-1 flex flex-col">
-							{restCourses.map((course) => (
-								<CourseAccordionItem course={course} />
-							))}
-						</ul>
-					</details>
-				</li>
-			)
-		}
+		{upcoming && <CourseAccordionItem course={upcoming} signupOpen />}
+		{pastCourses.map((course) => <CourseAccordionItem course={course} />)}
 	</ul>
 	{next && <NextSectionLink target={next.id} label={next.label} />}
 </Section>
@@ -172,10 +139,25 @@ const restCourses = pastCourses.slice(VISIBLE_COUNT);
 		margin-top: 0.75rem;
 	}
 
-	.course-details ul {
+	.course-details ul,
+	.course-details ol {
 		margin-top: 0.75rem;
 		padding-left: 1.25rem;
+	}
+
+	.course-details ul {
 		list-style: disc;
+	}
+
+	.course-details ol {
+		list-style: decimal;
+	}
+
+	/* Sublistas (ej. las etapas del proceso de selección): más pegadas al
+	   ítem que las contiene. */
+	.course-details li > ul,
+	.course-details li > ol {
+		margin-top: 0.25rem;
 	}
 
 	.course-details li + li {

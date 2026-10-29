@@ -13,7 +13,13 @@ const EXTENSIONS = ["webp", "png", "jpg", "jpeg"];
 
 const modules = import.meta.glob<{ default: ImageMetadata }>("/src/assets/cursos/*.{webp,png,jpg,jpeg}", { eager: true });
 
-const imagesByName = new Map<string, { extension: string; src: string }>();
+export interface CourseImage {
+	src: string;
+	width: number;
+	height: number;
+}
+
+const imagesByName = new Map<string, CourseImage & { extension: string }>();
 
 for (const [path, module] of Object.entries(modules)) {
 	const file = path.slice(path.lastIndexOf("/") + 1);
@@ -22,10 +28,12 @@ for (const [path, module] of Object.entries(modules)) {
 	const extension = file.slice(dot + 1).toLowerCase();
 	const current = imagesByName.get(name);
 	if (!current || EXTENSIONS.indexOf(extension) < EXTENSIONS.indexOf(current.extension)) {
-		imagesByName.set(name, { extension, src: module.default.src });
+		const { src, width, height } = module.default;
+		imagesByName.set(name, { extension, src, width, height });
 	}
 }
 
-export function findCourseImage(name: string): string | undefined {
-	return imagesByName.get(name)?.src;
+export function findCourseImage(name: string): CourseImage | undefined {
+	const image = imagesByName.get(name);
+	return image && { src: image.src, width: image.width, height: image.height };
 }
