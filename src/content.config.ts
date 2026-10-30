@@ -1,5 +1,5 @@
 import { defineCollection } from "astro:content";
-import { glob } from "astro/loaders";
+import { file, glob } from "astro/loaders";
 import { z } from "astro/zod";
 
 // Content Layer (Astro 5+/6/7) — ver docs/ARCHITECTURE.md §9.
@@ -26,4 +26,20 @@ const courses = defineCollection({
   }),
 });
 
-export const collections = { courses };
+// Contenido educativo del buscador de "Educación" (BACKLOG.md §15-16):
+// psicopíldoras y psicorelámpagos publicados en Instagram. Un solo JSON,
+// en el orden en que se publicaron. `nota` es interna (pendientes a
+// confirmar con el equipo) y no se muestra en la web.
+const educational = defineCollection({
+  loader: file("src/content/educacion.json"),
+  schema: z.object({
+    title: z.string(),
+    type: z.enum(["psicopildora", "psicorelampago"]),
+    author: z.string().nullable(),
+    externalUrl: z.url(),
+    whatsappMessage: z.string(),
+    nota: z.string().optional(),
+  }),
+});
+
+export const collections = { courses, educational };
