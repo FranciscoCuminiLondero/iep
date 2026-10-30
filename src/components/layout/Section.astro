@@ -24,6 +24,28 @@
 // del índice (margin-left, no padding — las figuras absolute se siguen
 // posicionando contra el borde del contenido, como antes). El Hero va sin
 // margen: mientras se ve, el índice está arriba y no ocupa el costado.
+// Con margen va además en z-40: arriba del fondo de la columna del índice
+// (z-10) y debajo de sus pestañas (z-50), así una figura que sangra hacia
+// la izquierda pinta sobre la columna pero nunca sobre su texto (ver
+// SectionIndex.astro). La caja de la sección no pisa la columna (empieza
+// después, por el margen): solo lo que sangra. Cada sección además pinta
+// su propio tramo de columna bordó (::before), debajo de sus figuras: así
+// la sección siguiente, al subir, también tapa lo que la anterior dejó
+// sangrando sobre la columna (si no, quedaba asomando un pedazo de Bauman
+// con otra sección en pantalla).
+//
+// Paginado (BACKLOG.md §4): cada sección mide exactamente el alto de la
+// pantalla (en mobile, menos la barra de arriba; el Hero, la pantalla
+// entera porque la barra se le superpone). Lo resuelve el script de abajo:
+// 1. Listas marcadas con data-fit (cursos, educación): muestran tantos
+//    items (data-fit-item) como entren y un botón "Ver N … más"
+//    (data-fit-more) que despliega el resto.
+// 2. Si aun así el contenido no entra, la sección se corta abajo
+//    (data-collapsed: clip-path solo por abajo, así las figuras que sangran
+//    hacia arriba o los costados se siguen viendo) con un degradé y un
+//    botón "Ver más" que la despliega en el lugar; "Ver menos" la resume.
+// Sin JS no hay nada de esto: las secciones crecen con su contenido.
+import { ChevronDown } from "lucide-astro";
 import type { NavTabId } from "../../data/navigation";
 import type { SectionVariant } from "../../lib/sections";
 
@@ -48,21 +70,35 @@ const { id, variant, nav, sticky = true, railOffset = true, class: className } =
 	class:list={[
 		"section",
 		`section--${variant}`,
-		"relative scroll-mt-(--nav-bar-h) outline-none md:scroll-mt-0",
+		"relative isolate scroll-mt-(--nav-bar-h) outline-none md:scroll-mt-0",
 		sticky === true && "md:sticky md:top-(--sticky-top,0px)",
 		sticky === "lg" && "lg:sticky lg:top-(--sticky-top,0px)",
-		railOffset && "md:ml-(--nav-rail-w)",
+		railOffset && "section--rail-offset md:z-40 md:ml-(--nav-rail-w)",
 		className,
 	]}
 >
 	<slot />
+	<div class="section-fade" aria-hidden="true"></div>
+	<button
+		type="button"
+		data-section-more
+		hidden
+		aria-expanded="false"
+		class="section-more font-body absolute bottom-20 left-1/2 z-50 inline-flex -translate-x-1/2 items-center gap-2 rounded-full bg-fg px-5 py-2.5 text-sm font-bold text-(--section-bg)"
+	>
+		<span data-more-text>Ver más</span>
+		<ChevronDown class="h-4 w-4 transition-transform" aria-hidden="true" />
+	</button>
 </section>
 
 <script>
-	// Ver comentario de arriba. Se recalcula cuando cambia el alto de una
-	// sección (fuentes, imágenes, <details> abiertos) o el de la pantalla.
-	const stickySections = document.querySelectorAll<HTMLElement>("[data-sticky]");
+	import { scrollTargetFor, smoothScrollTo } from "../../lib/scroll";
 
+	const sections = [...document.querySelectorAll<HTMLElement>("[data-section]")];
+	const stickySections = sections.filter((section) => section.hasAttribute("data-sticky"));
+
+	// --- Sticky: top negativo si la sección es más alta que la pantalla
+	// (desplegada con "Ver más", o un curso abierto). Ver comentario de arriba.
 	const updateStickyTop = () => {
 		const viewportHeight = document.documentElement.clientHeight;
 		for (const section of stickySections) {
@@ -70,14 +106,214 @@ const { id, variant, nav, sticky = true, railOffset = true, class: className } =
 		}
 	};
 
+	// --- Paginado
+	const availableHeight = (section: HTMLElement) => {
+		const viewportHeight = document.documentElement.clientHeight;
+		if (section === sections[0]) return viewportHeight;
+		return viewportHeight - (parseFloat(getComputedStyle(section).scrollMarginTop) || 0);
+	};
+
+	// Alto que necesita el contenido en flujo (sin las figuras absolute, la
+	// flecha ni el botón "Ver más"): del borde superior del primer hijo al
+	// inferior del último, más el padding de la sección. Con offsetTop /
+	// offsetHeight (posición de layout) y no getBoundingClientRect ni
+	// scrollHeight: esos cuentan los transform, y las figuras que entran
+	// animadas (translateY) darían desbordes que no existen.
+	const contentHeight = (section: HTMLElement) => {
+		let top = Infinity;
+		let bottom = -Infinity;
+		for (const child of section.children) {
+			if (!(child instanceof HTMLElement)) continue;
+			const style = getComputedStyle(child);
+			if (style.position === "absolute" || style.position === "fixed" || style.display === "none") continue;
+			top = Math.min(top, child.offsetTop - parseFloat(style.marginTop));
+			bottom = Math.max(bottom, child.offsetTop + child.offsetHeight + parseFloat(style.marginBottom));
+		}
+		if (top === Infinity) return 0;
+		const style = getComputedStyle(section);
+		return bottom - top + parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+	};
+
+	const setMoreButton = (button: HTMLButtonElement, expanded: boolean, text: string) => {
+		button.setAttribute("aria-expanded", String(expanded));
+		const label = button.querySelector("[data-more-text]");
+		if (label) label.textContent = text;
+	};
+
+	const fitLists = (section: HTMLElement, available: number) => {
+		for (const group of section.querySelectorAll<HTMLElement>("[data-fit]")) {
+			const button = group.querySelector<HTMLButtonElement>("[data-fit-more]");
+			const items = [...group.querySelectorAll<HTMLElement>("[data-fit-item]")];
+			items.forEach((item) => item.removeAttribute("data-fit-hidden"));
+			if (!button) continue;
+			button.hidden = true;
+
+			// Los que un filtro ya ocultó (hidden) no cuentan.
+			const candidates = items.filter((item) => !item.hidden);
+			if (contentHeight(section) <= available) {
+				// Entra todo: si estaba desplegada, ya no hace falta.
+				group.dataset.fitExpanded = "false";
+				continue;
+			}
+			button.hidden = false;
+			if (group.dataset.fitExpanded === "true") {
+				setMoreButton(button, true, "Ver menos");
+				continue;
+			}
+			// Puede llegar a 0: si ni un item entra (pantallas bajas), queda
+			// solo el botón, antes que cortar la sección entera.
+			let shown = candidates.length;
+			while (shown > 0 && contentHeight(section) > available) {
+				candidates[--shown].setAttribute("data-fit-hidden", "");
+			}
+			const rest = candidates.length - shown;
+			if (rest === 0) button.hidden = true;
+			else setMoreButton(button, false, ["Ver", rest, button.dataset.moreLabel, "más"].filter(Boolean).join(" "));
+		}
+	};
+
+	const fitSection = (section: HTMLElement) => {
+		const available = availableHeight(section);
+		section.style.minHeight = `${available}px`;
+		section.style.height = "";
+		section.dataset.collapsed = "false";
+
+		fitLists(section, available);
+
+		const button = section.querySelector<HTMLButtonElement>(":scope > [data-section-more]");
+		if (!button) return;
+		// Una lista desplegada con su propio "Ver más" ya es una expansión
+		// pedida por el usuario: la sección crece, no se vuelve a cortar.
+		const listExpanded = [...section.querySelectorAll<HTMLElement>("[data-fit]")].some((group) => group.dataset.fitExpanded === "true");
+		const overflows = !listExpanded && contentHeight(section) > available + 1;
+		button.hidden = !overflows;
+		if (!overflows) {
+			section.dataset.userExpanded = "false";
+			return;
+		}
+		if (section.dataset.userExpanded === "true") {
+			setMoreButton(button, true, "Ver menos");
+			return;
+		}
+		section.style.height = `${available}px`;
+		section.dataset.collapsed = "true";
+		setMoreButton(button, false, "Ver más");
+	};
+
+	const fitAll = () => {
+		sections.forEach(fitSection);
+		updateStickyTop();
+	};
+
+	// Al resumir, si la sección quedó por encima de la pantalla, el scroll
+	// vuelve a su comienzo.
+	const backToTop = (section: HTMLElement) => {
+		if (section.getBoundingClientRect().top < 0) smoothScrollTo(scrollTargetFor(section));
+	};
+
+	for (const section of sections) {
+		section.querySelector<HTMLButtonElement>(":scope > [data-section-more]")?.addEventListener("click", () => {
+			const expand = section.dataset.userExpanded !== "true";
+			section.dataset.userExpanded = String(expand);
+			fitSection(section);
+			updateStickyTop();
+			if (!expand) backToTop(section);
+		});
+
+		for (const group of section.querySelectorAll<HTMLElement>("[data-fit]")) {
+			group.querySelector<HTMLButtonElement>("[data-fit-more]")?.addEventListener("click", () => {
+				const expand = group.dataset.fitExpanded !== "true";
+				group.dataset.fitExpanded = String(expand);
+				fitSection(section);
+				updateStickyTop();
+				if (!expand) backToTop(section);
+			});
+		}
+	}
+
+	// Otro componente cambió qué items se ven (el buscador de Educación).
+	document.addEventListener("section-fit:refresh", (event) => {
+		const section = (event as CustomEvent<HTMLElement>).detail;
+		if (!section) return;
+		fitSection(section);
+		updateStickyTop();
+	});
+
+	// Cuándo recalcular: al cargar, cuando terminan de cargar fuentes e
+	// imágenes (cambian alturas), y al cambiar el tamaño de la ventana. En
+	// mobile la barra del navegador cambia el alto al hacer scroll: esos
+	// cambios chicos de alto se ignoran para que la página no salte.
+	let lastWidth = window.innerWidth;
+	let lastHeight = document.documentElement.clientHeight;
+	let pending = 0;
+	const scheduleFit = () => {
+		cancelAnimationFrame(pending);
+		pending = requestAnimationFrame(fitAll);
+	};
+
+	fitAll();
+	document.fonts?.ready.then(scheduleFit);
+	window.addEventListener("load", scheduleFit);
+	window.addEventListener("resize", () => {
+		const width = window.innerWidth;
+		const height = document.documentElement.clientHeight;
+		if (width !== lastWidth || Math.abs(height - lastHeight) > 120) {
+			lastWidth = width;
+			lastHeight = height;
+			scheduleFit();
+		} else {
+			updateStickyTop();
+		}
+	});
+
 	if (stickySections.length > 0) {
 		const observer = new ResizeObserver(updateStickyTop);
 		stickySections.forEach((section) => observer.observe(section));
-		window.addEventListener("resize", updateStickyTop);
 	}
 </script>
 
 <style is:global>
+	/* Paginado (ver comentario de arriba). Fuera de @layer a propósito: tiene
+	   que ganarles a las utilities de cada sección (justify-center, etc.). */
+	.section[data-collapsed="true"] {
+		/* Corta solo por abajo: arriba y a los costados el recorte se estira
+		   para no comerse las figuras que sangran. */
+		clip-path: inset(-100vh -100vw 0 -100vw);
+		/* "safe": si el contenido no entra, se alinea desde arriba en vez de
+		   desbordar para los dos lados (lo de arriba quedaría inalcanzable). */
+		justify-content: safe center;
+		align-items: safe center;
+	}
+
+	.section-fade {
+		display: none;
+		position: absolute;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		z-index: 45;
+		height: 10rem;
+		background: linear-gradient(to bottom, transparent, var(--section-bg) 70%);
+		pointer-events: none;
+	}
+
+	.section[data-collapsed="true"] > .section-fade {
+		display: block;
+	}
+
+	/* Desplegada: lugar abajo para el botón "Ver menos". */
+	.section[data-user-expanded="true"] {
+		padding-bottom: 9rem;
+	}
+
+	[data-fit-hidden] {
+		display: none !important;
+	}
+
+	:is([data-section-more], [data-fit-more])[aria-expanded="true"] svg {
+		rotate: 180deg;
+	}
+
 	/* @layer base: cualquier utility de Tailwind (que vive en
 	   @layer utilities) puede pisar esto si una sección lo necesita. */
 	@layer base {
@@ -92,6 +328,23 @@ const { id, variant, nav, sticky = true, railOffset = true, class: className } =
 			--section-bg: var(--bitter-chocolate);
 			--section-fg: var(--white);
 			--section-accent: var(--white);
+		}
+
+		/* Tramo de columna del índice de esta sección (ver comentario de
+		   arriba). z -20 dentro del contexto de la sección (z-40): debajo de
+		   las figuras (-z-10) y del contenido. */
+		@media (min-width: 48rem) {
+			.section--rail-offset::before {
+				content: "";
+				position: absolute;
+				top: 0;
+				right: 100%;
+				bottom: 0;
+				z-index: -20;
+				width: var(--nav-rail-w);
+				background-color: var(--bitter-chocolate);
+				pointer-events: none;
+			}
 		}
 
 		.section--white {

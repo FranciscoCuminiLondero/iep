@@ -107,6 +107,7 @@ const { id, variant, nav, next } = Astro.props;
 	/>
 
 	<div class="flex max-w-md flex-col items-center gap-4 md:items-start">
+		<p class="font-body text-xs font-bold tracking-[0.1em] text-accent uppercase">Sobre nosotros</p>
 		<h2 class="font-title text-[clamp(1.5rem,4.5vw,2.5rem)] font-extrabold text-fg uppercase">
 			Espacio de interés en Cultura, Salud y Educación
 		</h2>
@@ -116,6 +117,9 @@ const { id, variant, nav, next } = Astro.props;
 			aporte al ámbito educativo y formativo para el desarrollo de los futuros
 			profesionales de la salud mental de la ciudad y la región".
 		</p>
+		{/* TODO(cliente): texto breve (2-3 párrafos) sobre por qué armaron la
+		    página (BACKLOG.md §17). Va acá, entre la declaración y los
+		    fundadores, con el mismo estilo de párrafo de arriba. */}
 		<p class="font-body text-sm font-bold text-fg/70">{site.founders}</p>
 
 		<div class="mt-2 flex flex-col items-center gap-3 md:items-start">
@@ -137,6 +141,7 @@ const { id, variant, nav, next } = Astro.props;
 				))
 			}
 		</div>
+		{/* TODO(cliente): mercadería, a futuro (BACKLOG.md §17). */}
 	</div>
 
 	<a

@@ -28,7 +28,7 @@ const { target, label = "Ir a la siguiente sección" } = Astro.props;
 <a
 	href={`#${target}`}
 	aria-label={label}
-	class="absolute bottom-6 left-1/2 flex h-11 w-11 -translate-x-1/2 items-center justify-center text-fg/60 drop-shadow-[0_0_4px_var(--section-bg)] transition-transform hover:scale-110 hover:text-fg"
+	class="absolute bottom-6 left-1/2 z-50 flex h-11 w-11 -translate-x-1/2 items-center justify-center text-fg/60 drop-shadow-[0_0_4px_var(--section-bg)] transition-transform hover:scale-110 hover:text-fg"
 >
 	<ChevronDown class="h-7 w-7" aria-hidden="true" />
 </a>

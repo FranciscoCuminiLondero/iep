@@ -3,6 +3,7 @@ import { courseRepository } from "../../lib/courses/local.repository";
 import FigureCutout from "../collage/FigureCutout.astro";
 import NextSectionLink from "../ui/NextSectionLink.astro";
 import CourseAccordionItem from "../course/CourseAccordionItem.astro";
+import { ChevronDown } from "lucide-astro";
 import type { SectionProps } from "../../lib/sections";
 import Section from "../layout/Section.astro";
 
@@ -59,10 +60,11 @@ const pastCourses = await courseRepository.getPast();
      más) y sm:h-16 en tablet (la mitad de esa h-32 original, para que en
      esa franja intermedia no compita tanto con el encabezado).
 
-     Desde md, 24vh/36vh (antes 56vh): con la columna del índice la sección
-     es ~190px más angosta y Bauman quedaba debajo del arranque de la lista,
-     con los títulos de curso ilegibles encima de la foto. Misma posición,
-     más chico — mismo criterio que los Freud de About.astro. -->
+     Desde md crece por breakpoint (24vh → 44vh → 56vh en xl): entre md y
+     lg la sección es angosta por la columna del índice y más grande
+     quedaría debajo del arranque de la lista. La parte que sangra hacia la
+     izquierda pinta SOBRE el fondo de la columna del índice (ver
+     SectionIndex.astro), nunca sobre sus pestañas. -->
 
 <!-- md:sticky md:top-0, mismo efecto "cards" que Hero/Próximo curso/Quiénes
      somos (containing block compartido en index.astro, incluyendo a Pantu
@@ -90,7 +92,7 @@ const pastCourses = await courseRepository.getPast();
 	<FigureCutout
 		src="/images/Zygmunt-Bauman.png"
 		alt="Retrato de Zygmunt Bauman"
-		class="absolute -top-8 -left-20 -z-10 h-48 sm:-left-14 sm:h-16 md:-top-16 md:-left-28 md:h-[24vh] lg:h-[36vh]"
+		class="absolute -top-8 -left-20 -z-10 h-48 sm:-left-14 sm:h-16 md:-top-16 md:-left-28 md:h-[24vh] lg:h-[44vh] xl:h-[56vh]"
 	/>
 	<h2 class="font-title text-[clamp(1.5rem,4.5vw,2.5rem)] font-extrabold text-fg uppercase">
 		Nuestros cursos
@@ -98,10 +100,26 @@ const pastCourses = await courseRepository.getPast();
 	<p class="font-body -mt-6 max-w-[50ch] text-sm text-fg/70">
 		Todos estos cursos siguen disponibles — podés pedirlos por WhatsApp para hacerlos cuando quieras.
 	</p>
-	<ul class="flex w-full max-w-2xl flex-col">
-		{upcoming && <CourseAccordionItem course={upcoming} signupOpen />}
-		{pastCourses.map((course) => <CourseAccordionItem course={course} />)}
-	</ul>
+	{/* Paginado (Section.astro): se muestran tantos cursos como entren en
+	    la pantalla y "Ver N cursos más" despliega el resto. */}
+	<div data-fit class="w-full max-w-2xl">
+		<ul id="course-list" class="flex flex-col">
+			{upcoming && <CourseAccordionItem course={upcoming} signupOpen />}
+			{pastCourses.map((course) => <CourseAccordionItem course={course} />)}
+		</ul>
+		<button
+			type="button"
+			data-fit-more
+			data-more-label="cursos"
+			hidden
+			aria-expanded="false"
+			aria-controls="course-list"
+			class="font-body mx-auto mt-5 flex items-center gap-2 rounded-full border border-fg/40 px-5 py-2 text-sm font-bold text-fg transition-colors hover:border-fg"
+		>
+			<span data-more-text></span>
+			<ChevronDown class="h-4 w-4 transition-transform" aria-hidden="true" />
+		</button>
+	</div>
 	{next && <NextSectionLink target={next.id} label={next.label} />}
 </Section>
 

@@ -1,18 +1,214 @@
 ---
+import { getCollection } from "astro:content";
+import { ChevronDown, ExternalLink, MessageCircle, Search } from "lucide-astro";
 import type { SectionProps } from "../../lib/sections";
 import Section from "../layout/Section.astro";
 import NextSectionLink from "../ui/NextSectionLink.astro";
+import FigureCutout from "../collage/FigureCutout.astro";
+import { whatsappUrl } from "../../lib/whatsapp/messages";
+import sourceItems from "../../content/educacion.json";
 
 type Props = SectionProps;
 
 const { id, variant, nav, next } = Astro.props;
+
+// getCollection ordena por id; acá se respeta el orden del JSON (el de
+// publicación en Instagram).
+const order: string[] = sourceItems.map((item) => item.id);
+const items = (await getCollection("educational")).sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+
+const typeLabels = { psicopildora: "Psicopíldora", psicorelampago: "Psicorelámpago" } as const;
+
+// Texto en el que busca el filtro: título, autor y tipo, en minúscula y
+// sin tildes (así "panoptico" encuentra "panóptico").
+const searchText = (...parts: (string | null)[]) =>
+	parts
+		.filter(Boolean)
+		.join(" ")
+		.normalize("NFD")
+		.replace(/\p{Diacritic}/gu, "")
+		.toLowerCase();
+
+const filters = [
+	{ value: "todos", label: "Todos" },
+	{ value: "psicopildora", label: "Psicopíldoras" },
+	{ value: "psicorelampago", label: "Psicorelámpagos" },
+];
 ---
 
-<!-- TODO: contenido de "Educación" — buscador "¿Buscás un tema en
-     específico?" con psicopíldoras y psicorelámpagos (BACKLOG.md §15-16).
-     Por ahora solo el esqueleto, para que la pestaña del índice no quede
-     con un link roto. -->
-<Section id={id} variant={variant} nav={nav} class="flex min-h-screen flex-col items-center justify-center gap-6 px-6 py-20 text-center">
-	<h2 class="font-title text-[clamp(1.5rem,4.5vw,2.5rem)] font-black text-fg uppercase">Educación</h2>
+<!-- BRIEF/BACKLOG.md §15-16 — "¿Buscás un tema en específico?": todas las
+     psicopíldoras y psicorelámpagos (src/content/educacion.json), con link
+     directo al post y un botón a WhatsApp con el mensaje prearmado de cada
+     una (VOICE.md §3.4).
+
+     Sin JS se ve la lista completa (el buscador y los filtros solo
+     aparecen si el script corre). El filtro es local: son pocos items y
+     ya están todos en la página.
+
+     Libros (antes en Pantu, donde cruzaban hacia arriba y se montaban
+     sobre los Freud): esquina inferior derecha de esta sección, sangrando
+     por el borde, detrás del contenido. En mobile va arriba (en la esquina
+     de abajo quedaba encima de la lista). -->
+<Section id={id} variant={variant} nav={nav} class="isolate flex min-h-screen flex-col items-center justify-center gap-6 px-6 py-12 md:gap-8 md:py-20">
+	<FigureCutout
+		src="/images/libros.png"
+		alt="Pila de libros de psicoanálisis y filosofía"
+		class="absolute -top-6 -right-6 -z-10 h-24 sm:h-32 md:top-auto md:-right-10 md:bottom-12 md:h-80"
+	/>
+
+	<div class="flex max-w-2xl flex-col items-center gap-3 text-center">
+		<p class="font-body text-xs font-bold tracking-[0.1em] text-accent uppercase">Educación</p>
+		<h2 class="font-title text-[clamp(1.5rem,4.5vw,2.5rem)] font-black text-fg uppercase">¿Buscás un tema en específico?</h2>
+		<p class="font-body hidden max-w-[50ch] text-sm text-fg/70 sm:block">
+			Todas las psicopíldoras y psicorelámpagos de IEP. Si querés profundizar en alguno, escribinos.
+		</p>
+	</div>
+
+	{/* Paginado (Section.astro): tantos temas como entren en la pantalla y
+	    "Ver N temas más" despliega el resto. Se recalcula al buscar. */}
+	<div data-fit class="w-full max-w-2xl">
+		<div data-edu-controls hidden class="mb-6 flex flex-col gap-3">
+			<label class="relative block">
+				<span class="sr-only">Buscar un tema o autor</span>
+				<Search class="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-fg/70" aria-hidden="true" />
+				<input
+					data-edu-search
+					type="search"
+					placeholder="Buscá un tema o autor (ej. Freud, obediencia)"
+					autocomplete="off"
+					aria-controls="edu-list"
+					class="font-body w-full rounded-full border border-fg/25 bg-transparent py-3 pr-4 pl-11 text-base text-fg placeholder:text-fg/50 focus:border-fg focus:outline-none"
+				/>
+			</label>
+			<div class="flex flex-wrap gap-2" role="group" aria-label="Filtrar por tipo">
+				{
+					filters.map((filter, index) => (
+						<button
+							type="button"
+							data-edu-filter={filter.value}
+							aria-pressed={index === 0 ? "true" : "false"}
+							class="font-body rounded-full border border-fg/25 px-4 py-1.5 text-xs font-bold tracking-[0.04em] text-fg uppercase transition-colors hover:border-fg aria-pressed:border-fg aria-pressed:bg-fg aria-pressed:text-(--section-bg)"
+						>
+							{filter.label}
+						</button>
+					))
+				}
+			</div>
+			<p data-edu-count class="font-body text-xs text-fg/70" aria-live="polite"></p>
+		</div>
+
+		<ul id="edu-list" class="flex flex-col">
+			{
+				items.map(({ data }) => (
+					<li data-edu-item data-fit-item data-type={data.type} data-search={searchText(data.title, data.author, typeLabels[data.type])} class="border-b border-fg/15 py-3 md:flex md:items-center md:justify-between md:gap-6">
+						{/* Fila compacta (paginado: entran más temas por pantalla): desde
+						    md los links van a la derecha, en la misma línea. */}
+						<div class="min-w-0">
+							<p class="font-body text-xs font-bold tracking-[0.1em] text-accent uppercase">{typeLabels[data.type]}</p>
+							<p class="font-body mt-0.5 font-bold text-fg">
+								{data.title}
+								{data.author && <span class="font-normal text-fg/70"> · {data.author}</span>}
+							</p>
+						</div>
+						<div class="mt-2 flex shrink-0 flex-wrap gap-x-5 gap-y-1 md:mt-0">
+							<a
+								href={data.externalUrl}
+								target="_blank"
+								rel="noopener"
+								class="font-body inline-flex items-center gap-1.5 text-sm font-bold text-accent underline underline-offset-2"
+							>
+								<ExternalLink class="h-3.5 w-3.5" aria-hidden="true" />
+								Ver en Instagram
+							</a>
+							<a
+								href={whatsappUrl(data.whatsappMessage)}
+								target="_blank"
+								rel="noopener"
+								class="font-body inline-flex items-center gap-1.5 text-sm font-bold text-accent underline underline-offset-2"
+							>
+								<MessageCircle class="h-3.5 w-3.5" aria-hidden="true" />
+								Quiero profundizar
+							</a>
+						</div>
+					</li>
+				))
+			}
+		</ul>
+		<button
+			type="button"
+			data-fit-more
+			data-more-label="temas"
+			hidden
+			aria-expanded="false"
+			aria-controls="edu-list"
+			class="font-body mx-auto mt-5 flex items-center gap-2 rounded-full border border-fg/40 px-5 py-2 text-sm font-bold text-fg transition-colors hover:border-fg"
+		>
+			<span data-more-text></span>
+			<ChevronDown class="h-4 w-4 transition-transform" aria-hidden="true" />
+		</button>
+
+		{/* Sin resultados: mismo cierre cercano que Pantu (VOICE.md §3.5). */}
+		<div data-edu-empty hidden class="py-8 text-center">
+			<p class="font-body text-base font-bold text-fg">No encontramos ese tema.</p>
+			<p class="font-body mt-1 text-sm text-fg/70">
+				¿Querés que lo veamos?{" "}
+				<a data-edu-ask href={whatsappUrl("Pueden explicarme con más profundidad:")} target="_blank" rel="noopener" class="font-bold text-accent underline underline-offset-2">
+					Escribinos
+				</a>
+			</p>
+		</div>
+	</div>
+
 	{next && <NextSectionLink target={next.id} label={next.label} />}
 </Section>
+
+<script>
+	import { whatsappUrl } from "../../lib/whatsapp/messages";
+
+	const controls = document.querySelector<HTMLElement>("[data-edu-controls]");
+	const input = document.querySelector<HTMLInputElement>("[data-edu-search]");
+	const filterButtons = [...document.querySelectorAll<HTMLButtonElement>("[data-edu-filter]")];
+	const items = [...document.querySelectorAll<HTMLElement>("[data-edu-item]")];
+	const count = document.querySelector<HTMLElement>("[data-edu-count]");
+	const empty = document.querySelector<HTMLElement>("[data-edu-empty]");
+	const ask = document.querySelector<HTMLAnchorElement>("[data-edu-ask]");
+
+	const normalize = (text: string) =>
+		text
+			.normalize("NFD")
+			.replace(/\p{Diacritic}/gu, "")
+			.toLowerCase()
+			.trim();
+
+	if (controls && input && items.length > 0) {
+		controls.hidden = false;
+		let type = "todos";
+
+		const update = () => {
+			const words = normalize(input.value).split(/\s+/).filter(Boolean);
+			let visible = 0;
+			for (const item of items) {
+				const text = item.dataset.search ?? "";
+				const match = (type === "todos" || item.dataset.type === type) && words.every((word) => text.includes(word));
+				item.hidden = !match;
+				if (match) visible++;
+			}
+			if (count) count.textContent = visible === 1 ? "1 resultado" : `${visible} resultados`;
+			if (empty) empty.hidden = visible > 0;
+			// "Escribinos" lleva lo que se buscó, con el mismo formato del resto.
+			if (ask) ask.href = whatsappUrl(`Pueden explicarme con más profundidad: ${input.value.trim()}`.trim());
+			// Cambió qué temas hay: Section.astro recalcula cuántos entran.
+			document.dispatchEvent(new CustomEvent("section-fit:refresh", { detail: controls.closest("[data-section]") }));
+		};
+
+		input.addEventListener("input", update);
+		for (const button of filterButtons) {
+			button.addEventListener("click", () => {
+				type = button.dataset.eduFilter ?? "todos";
+				for (const other of filterButtons) other.setAttribute("aria-pressed", String(other === button));
+				update();
+			});
+		}
+		update();
+	}
+</script>

@@ -16,11 +16,24 @@
 import { navTabs } from "../../data/navigation";
 ---
 
+<!-- Fondo de la columna lateral, separado de las pestañas: va DEBAJO de
+     las secciones (z-10 contra su z-40, Section.astro) y las pestañas
+     ARRIBA (z-50). Así una figura que sangra hacia la izquierda (Bauman)
+     pinta sobre el bordó de la columna pero nunca sobre el texto de las
+     pestañas. Solo en formato "side": arriba, la barra lleva su propio
+     fondo (ninguna sección la cruza mientras se ve el Hero). -->
+<div
+	id="section-index-bg"
+	data-mode="top"
+	aria-hidden="true"
+	class="fixed inset-y-0 left-0 z-10 hidden w-(--nav-rail-w) bg-bitter-chocolate md:data-[mode=side]:block"
+></div>
+
 <nav
 	id="section-index"
 	data-mode="top"
 	aria-label="Secciones de la página"
-	class="group fixed inset-x-0 top-0 z-30 h-(--nav-bar-h) bg-bitter-chocolate md:data-[mode=side]:right-auto md:data-[mode=side]:bottom-0 md:data-[mode=side]:h-auto md:data-[mode=side]:w-(--nav-rail-w)"
+	class="group fixed inset-x-0 top-0 z-50 h-(--nav-bar-h) bg-bitter-chocolate md:data-[mode=side]:right-auto md:data-[mode=side]:bg-transparent md:data-[mode=side]:bottom-0 md:data-[mode=side]:h-auto md:data-[mode=side]:w-(--nav-rail-w)"
 >
 	<ul class="flex h-full md:justify-center md:gap-2 md:group-data-[mode=side]:flex-col md:group-data-[mode=side]:gap-1 md:group-data-[mode=side]:px-3">
 		{
@@ -47,7 +60,8 @@ import { navTabs } from "../../data/navigation";
 	   Con prefers-reduced-motion la regla global de global.css la deja en
 	   ~0ms: cambia directo. */
 	@media (min-width: 48rem) {
-		#section-index[data-switched][data-mode="side"] {
+		#section-index[data-switched][data-mode="side"],
+		#section-index-bg[data-switched][data-mode="side"] {
 			animation: nav-enter-side var(--duration-base) var(--ease-editorial);
 		}
 
@@ -73,6 +87,7 @@ import { navTabs } from "../../data/navigation";
 
 <script>
 	const nav = document.getElementById("section-index");
+	const navBackground = document.getElementById("section-index-bg");
 
 	// Formato: arriba mientras el sentinel del Hero no cruzó la mitad de la
 	// pantalla hacia arriba (también cuando todavía está debajo del
@@ -87,6 +102,10 @@ import { navTabs } from "../../data/navigation";
 				if (nav.dataset.mode === mode) return;
 				nav.dataset.mode = mode;
 				nav.dataset.switched = "";
+				if (navBackground) {
+					navBackground.dataset.mode = mode;
+					navBackground.dataset.switched = "";
+				}
 			},
 			{ threshold: 0, rootMargin: "-50% 0px 0px 0px" },
 		).observe(heroEnd);

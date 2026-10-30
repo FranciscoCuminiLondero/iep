@@ -45,7 +45,7 @@ const initials = course.title
 const flyerAspect = course.flyerAspect ?? 1.25;
 ---
 
-<li class="border-b border-fg/15">
+<li data-fit-item class="border-b border-fg/15">
 	<details data-accordion class="course-item group py-4">
 		<summary class:list={["course-summary cursor-pointer list-none", course.flyer && "course-summary--flyer"]}>
 			<span

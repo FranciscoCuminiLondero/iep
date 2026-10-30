@@ -35,13 +35,14 @@ const whatsappHref =
      tapada por la siguiente.
 
      SOLO desde md — ver comentario en Hero.astro: en mobile esta sección
-     apila flyer + Lacan + texto en columna y termina midiendo 1058px
-     contra ~842px de viewport (medido); con sticky, el botón de WhatsApp
+     apila flyer + texto en columna y puede superar el alto de pantalla
+     (medido 1058px contra ~842px con Lacan, antes de que pasara a "Sobre
+     nosotros"); con sticky, el botón de WhatsApp
      (más abajo del todo) no se vuelve alcanzable hasta un tramo de scroll
-     enorme, para cuando "Quiénes somos" ya la tapó.
+     enorme, para cuando la sección siguiente ya la tapó.
 
-     Fila y sticky recién desde lg (no md): flyer + Lacan + texto necesitan
-     ~850px, y entre 768 y 1023px no entran (menos todavía con la columna
+     Fila y sticky recién desde lg (no md): entre 768 y 1023px la fila no
+     entraba (menos todavía con la columna
      del índice a la izquierda) — se cortaban por los dos costados. En ese
      rango va apilada y sin sticky, igual que en mobile. -->
 <Section id={id} variant={variant} nav={nav} sticky="lg" class="flex min-h-screen flex-col items-center justify-center gap-10 px-6 py-20 text-center lg:flex-row lg:gap-16 lg:text-left">
@@ -59,14 +60,6 @@ const whatsappHref =
 						class="aspect-[404/505] w-48 shrink-0 sm:w-56 md:w-64"
 					/>
 				)}
-
-				{/* Lacan entre el flyer y el texto — pieza fija de identidad de la
-				    sección (no viene de course.image, es un pedido puntual de diseño). */}
-				<FigureCutout
-					src="/images/lacan.png"
-					alt="Jacques Lacan"
-					class="h-[36vh] shrink-0 md:h-[42vh] lg:h-[46vh]"
-				/>
 
 				<div class="relative isolate flex max-w-md flex-col items-center gap-4 lg:items-start">
 					<p class="font-body text-xs font-bold tracking-[0.1em] text-accent uppercase">Próximo curso</p>
@@ -113,12 +106,12 @@ const whatsappHref =
 		) : (
 			<>
 				{/* Sin curso con inscripción abierta: mismo mensaje que el menú del
-				    bot de WhatsApp ("📅 Nuevos cursos en 2027."). Lacan se mantiene
-				    hasta que pase a "Sobre nosotros" (BACKLOG.md §14). */}
+				    bot de WhatsApp ("📅 Nuevos cursos en 2027."), con Lacan como
+				    figura de la sección. */}
 				<FigureCutout
 					src="/images/lacan.png"
 					alt="Jacques Lacan"
-					class="h-[36vh] shrink-0 md:h-[42vh] lg:h-[46vh]"
+					class="h-[22vh] shrink-0 sm:h-[36vh] md:h-[42vh] lg:h-[46vh]"
 				/>
 				<div class="flex max-w-md flex-col items-center gap-4 lg:items-start">
 					<p class="font-body text-xs font-bold tracking-[0.1em] text-accent uppercase">Próximo curso</p>
